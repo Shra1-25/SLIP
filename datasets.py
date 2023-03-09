@@ -17,6 +17,7 @@ from torchvision import transforms
 from torchvision import datasets as t_datasets
 
 import utils
+import pandas as pd
 
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -39,6 +40,21 @@ def yfcc_loader(root, index):
         img = Image.open(myzip.open(file_img))
     return img.convert('RGB')
 
+class ISICValDataset(torch.utils.data.Dataset):
+    def __init__(self, val_transform, root, val_path):
+        annotations = pd.read_csv(val_path)
+        self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i,'target']) for i in range(len(annotations))]
+        self.root = root
+        self.transform = val_transform
+    def __getitem__(self, i):
+        image_id, target = self.samples[i]
+        path = os.path.join(self.root, 'full_data/', image_id)
+        img = pil_loader(path)
+        image = self.transform(img)
+        return image, target
+    def __len__(self):
+        return len(self.samples)
+
 
 class ImageCaptionDatasetBase(torch.utils.data.Dataset):
     def __init__(self, dataset, root, metadata):
@@ -60,6 +76,9 @@ class ImageCaptionDatasetBase(torch.utils.data.Dataset):
             with open(metadata) as f:
                 annotations = json.load(f)
             self.samples = [(ann['image_id'], ann['subreddit'], ann['caption']) for ann in annotations]
+        elif self.dataset == 'isic':
+            annotations = pd.read_csv(metadata)
+            self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i,'description']) for i in range(len(annotations))]
 
     def get_raw_item(self, i):
         if self.dataset == 'yfcc15m':
@@ -87,7 +106,11 @@ class ImageCaptionDatasetBase(torch.utils.data.Dataset):
             image_id, subreddit, caption = self.samples[i]
             path = os.path.join(self.root, subreddit, f"{image_id}.jpg")
             img = pil_loader(path)
-
+        elif self.dataset == 'isic':
+            image_id, caption = self.samples[i]
+            path = os.path.join(self.root, 'full_data/', image_id)
+            img = pil_loader(path)
+            # print(img.shape, caption.shape)
         return img, caption
 
     def __getitem__(self, i):
@@ -213,10 +236,12 @@ def get_downstream_dataset(catalog, name, is_train, transform):
 
 
 def get_dataset(train_transform, tokenizer, args):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                    #  std=[0.229, 0.224, 0.225])
+
+    normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
     augment = transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
+        transforms.RandomResizedCrop(384, scale=(0.08, 1.)),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
         ], p=0.8),

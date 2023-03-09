@@ -1,0 +1,122 @@
+submitit INFO (2023-03-09 13:10:50,079) - Starting with JobEnvironment(job_id=3795365, hostname=gv008.hpc.nyu.edu, local_rank=0(1), node=0(1), global_rank=0(1))
+submitit INFO (2023-03-09 13:10:50,079) - Loading pickle: /scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/3795365/3795365_submitted.pkl
+Process group: 1 tasks, rank: 0
+Not using distributed mode
+=> creating model: SLIP_VITB16
+=> creating dataset
+Namespace(dataset='isic', root='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/', metadata='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/train_split_metadata.csv', output_dir=PosixPath('/scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/3795365'), model='SLIP_VITB16', ssl_mlp_dim=4096, ssl_emb_dim=256, ssl_scale=1.0, ssl_temp=0.1, resume='', epochs=25, warmup_epochs=1, start_epoch=0, batch_size=4, lr=0.003, lr_start=1e-06, lr_end=1e-05, update_freq=1, wd=0.1, betas=(0.9, 0.98), eps=1e-08, eval_freq=1, disable_amp=False, print_freq=50, workers=10, evaluate=False, world_size=1, rank=0, local_rank=0, dist_url='file:///scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/def3901330434d08b851b76df7953794_init', dist_backend='nccl', seed=0, gpu=0, wandb=False, ngpus=1, nodes=1, timeout=2800, job_dir=PosixPath('/scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/%j'), partition='learnlab', use_volta32=False, comment='', distributed=False)
+=> beginning training
+Epoch: [0][   0/4052]	Time   6.59 (  6.59)	Data   4.31 (  4.31)	Mem (GB)    8.0 (   8.0)	loss 3.34e+00 (3.34e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: nan
+Epoch: [0][  50/4052]	Time   0.25 (  0.37)	Data   0.00 (  0.08)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.34e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.06991751492023468
+Epoch: [0][ 100/4052]	Time   0.24 (  0.31)	Data   0.00 (  0.04)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.52e+01)
+Total norm: 0.026735765859484673
+Epoch: [0][ 150/4052]	Time   0.24 (  0.29)	Data   0.00 (  0.03)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.48e+01)	ssl_acc 2.50e+01 (2.52e+01)
+Total norm: 0.010891911573708057
+Epoch: [0][ 200/4052]	Time   0.25 (  0.28)	Data   0.00 (  0.02)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.51e+01)
+Total norm: 0.00891723670065403
+Epoch: [0][ 250/4052]	Time   0.24 (  0.27)	Data   0.00 (  0.02)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.51e+01)
+Total norm: 0.007110783830285072
+Epoch: [0][ 300/4052]	Time   0.25 (  0.27)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.48e+01)	ssl_acc 2.50e+01 (2.51e+01)
+Total norm: 0.004600439686328173
+Epoch: [0][ 350/4052]	Time   0.24 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.48e+01)	ssl_acc 2.50e+01 (2.51e+01)
+Total norm: 0.00612000422552228
+Epoch: [0][ 400/4052]	Time   0.25 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.51e+01)
+Total norm: 0.006553178653120995
+Epoch: [0][ 450/4052]	Time   0.25 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.51e+01)
+Total norm: 0.006601610686630011
+Epoch: [0][ 500/4052]	Time   0.25 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.0062355659902095795
+Epoch: [0][ 550/4052]	Time   0.25 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.006119029596447945
+Epoch: [0][ 600/4052]	Time   0.25 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.006061822175979614
+Epoch: [0][ 650/4052]	Time   0.24 (  0.26)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.006334925070405006
+Epoch: [0][ 700/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.004308747127652168
+Epoch: [0][ 750/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.006622952874749899
+Epoch: [0][ 800/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.00667569087818265
+Epoch: [0][ 850/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.006861825007945299
+Epoch: [0][ 900/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.01)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.007210185751318932
+Epoch: [0][ 950/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.007305890787392855
+Epoch: [0][1000/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.0075655304826796055
+Epoch: [0][1050/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.006557578686624765
+Epoch: [0][1100/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.008177628740668297
+Epoch: [0][1150/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.008522299118340015
+Epoch: [0][1200/4052]	Time   0.26 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.008930010721087456
+Epoch: [0][1250/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.008551002480089664
+Epoch: [0][1300/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.009785872884094715
+Epoch: [0][1350/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.010294129140675068
+Epoch: [0][1400/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.49e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.01083950512111187
+Epoch: [0][1450/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.011442366056144238
+Epoch: [0][1500/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.012111211195588112
+Epoch: [0][1550/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.012860738672316074
+Epoch: [0][1600/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.013651004061102867
+Epoch: [0][1650/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.014537944458425045
+Epoch: [0][1700/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.015511604957282543
+Epoch: [0][1750/4052]	Time   0.27 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.01658659800887108
+Epoch: [0][1800/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.01776987686753273
+Epoch: [0][1850/4052]	Time   0.26 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.019077889621257782
+Epoch: [0][1900/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.020519383251667023
+Epoch: [0][1950/4052]	Time   0.26 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.022117039188742638
+Epoch: [0][2000/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.023889178410172462
+Epoch: [0][2050/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.02581941708922386
+Epoch: [0][2100/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.027996521443128586
+Epoch: [0][2150/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.030408095568418503
+Epoch: [0][2200/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03312593698501587
+Epoch: [0][2250/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03614185377955437
+Epoch: [0][2300/4052]	Time   0.26 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.0366230271756649
+Epoch: [0][2350/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03662455081939697
+Epoch: [0][2400/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.036623384803533554
+Epoch: [0][2450/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03662322834134102
+Epoch: [0][2500/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.0366235114634037
+Epoch: [0][2550/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.036622434854507446
+Epoch: [0][2600/4052]	Time   0.24 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03662509098649025
+Epoch: [0][2650/4052]	Time   0.26 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03662263602018356
+Epoch: [0][2700/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.036621879786252975
+Epoch: [0][2750/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03661991283297539
+Epoch: [0][2800/4052]	Time   0.25 (  0.25)	Data   0.00 (  0.00)	Mem (GB)    9.0 (   9.0)	loss 3.33e+00 (3.33e+00)	clip_loss 1.39e+00 (1.39e+00)	ssl_loss 1.95e+00 (1.95e+00)	clip_acc 2.50e+01 (2.50e+01)	ssl_acc 2.50e+01 (2.50e+01)
+Total norm: 0.03662514314055443

@@ -1,0 +1,50 @@
+/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/dataloader.py:478: UserWarning: This DataLoader will create 10 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+submitit ERROR (2023-03-08 21:49:19,970) - Submitted job triggered an exception
+Traceback (most recent call last):
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/submitit/core/_submit.py", line 11, in <module>
+    submitit_main()
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/submitit/core/submission.py", line 72, in submitit_main
+    process_job(args.folder)
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/submitit/core/submission.py", line 65, in process_job
+    raise error
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/submitit/core/submission.py", line 54, in process_job
+    result = delayed.result()
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/submitit/core/utils.py", line 133, in result
+    self._result = self.function(*self.args, **self.kwargs)
+  File "/scratch/ssc10020/IndependentStudy/SLIP/SLIP/run_with_submitit.py", line 59, in __call__
+    main_slip.main(self.args)
+  File "/scratch/ssc10020/IndependentStudy/SLIP/SLIP/main.py", line 231, in main
+    train_stats = train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule, args)
+  File "/scratch/ssc10020/IndependentStudy/SLIP/SLIP/main.py", line 283, in train
+    for data_iter, inputs in enumerate(train_loader):
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 1203, in _next_data
+    return self._process_data(data)
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 1229, in _process_data
+    data.reraise()
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/_utils.py", line 434, in reraise
+    raise exception
+RuntimeError: Caught RuntimeError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/worker.py", line 287, in _worker_loop
+    data = fetcher.fetch(index)
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    return self.collate_fn(data)
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/collate.py", line 84, in default_collate
+    return [default_collate(samples) for samples in transposed]
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/collate.py", line 84, in <listcomp>
+    return [default_collate(samples) for samples in transposed]
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/collate.py", line 74, in default_collate
+    return {key: default_collate([d[key] for d in batch]) for key in elem}
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/collate.py", line 74, in <dictcomp>
+    return {key: default_collate([d[key] for d in batch]) for key in elem}
+  File "/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/_utils/collate.py", line 82, in default_collate
+    raise RuntimeError('each element in list of batch should be of equal size')
+RuntimeError: each element in list of batch should be of equal size
+

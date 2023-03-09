@@ -23,20 +23,22 @@ import torch.utils.data
 import torch.utils.data.distributed
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
+from torchvision.utils import save_image
 
 import datasets
 import models
 from tokenizer import SimpleTokenizer
+from transformers import DistilBertTokenizer
 import utils
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser(description='SLIP training and evaluation', add_help=False)
     # Data
-    parser.add_argument('--dataset', default='yfcc15m', type=str, choices=['yfcc15m', 'cc3m', 'cc12m', 'coco', 'redcaps'])
+    parser.add_argument('--dataset', default='isic', type=str, choices=['yfcc15m', 'cc3m', 'cc12m', 'coco', 'redcaps'])
     parser.add_argument('--root', default='', type=str,
                         help='path to dataset root')
-    parser.add_argument('--metadata', default='yfcc15m.pkl', type=str,
+    parser.add_argument('--metadata', default='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/train_split_metadata.csv', type=str,
                         help='path to metadata file (see README for details)')
     parser.add_argument('--output-dir', default='./', type=str, help='output dir')
     # Model
@@ -54,7 +56,7 @@ def get_args_parser():
     parser.add_argument('--epochs', default=25, type=int)
     parser.add_argument('--warmup-epochs', default=1, type=int)
     parser.add_argument('--start-epoch', default=0, type=int)
-    parser.add_argument('--batch-size', default=64, type=int,
+    parser.add_argument('--batch-size', default=4, type=int,
                         help='number of samples per-device/per-gpu')
     parser.add_argument('--lr', default=3e-3, type=float)
     parser.add_argument('--lr-start', default=1e-6, type=float,
@@ -70,7 +72,7 @@ def get_args_parser():
     parser.add_argument('--disable-amp', action='store_true',
                         help='disable mixed-precision training (requires more memory and compute)')
     # System
-    parser.add_argument('--print-freq', default=10, type=int, help='print frequency')
+    parser.add_argument('--print-freq', default=50, type=int, help='print frequency')
     parser.add_argument('-j', '--workers', default=10, type=int, metavar='N',
                         help='number of data loading workers per process')
     parser.add_argument('--evaluate', action='store_true', help='eval only')
@@ -162,26 +164,29 @@ def main(args):
     # Data loading code
     print("=> creating dataset")
     tokenizer = SimpleTokenizer()
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    # tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                    #  std=[0.229, 0.224, 0.225])
+    normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
     train_transform = transforms.Compose([
-            transforms.RandomResizedCrop(224, scale=(0.5, 1.0)),
+            transforms.RandomResizedCrop(384, scale=(0.5, 1.0)),
             transforms.ToTensor(),
             normalize
         ])
     val_transform = transforms.Compose([
-            transforms.Resize(224),
-            transforms.CenterCrop(224),
+            transforms.Resize(384),
+            transforms.CenterCrop(384),
             transforms.ToTensor(),
             normalize
         ])
 
     train_dataset = datasets.get_dataset(train_transform, tokenizer, args)
-    cwd = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(cwd, 'dataset_catalog.json')) as f:
-        root = json.load(f)['imagenet']['path']
-    val_dataset = ImageFolder(os.path.join(root, 'val'), val_transform)
-
+    # cwd = os.path.dirname(os.path.realpath(__file__))
+    # with open(os.path.join(cwd, 'dataset_catalog.json')) as f:
+        # root = json.load(f)['imagenet']['path']
+    # val_dataset = ImageFolder(os.path.join(args.root, 'val'), val_transform)
+    val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'))
+    
     # dist eval resamples data to pad uneven batch sizes
     # make sure num_samples = 0 mod num_gpus for exact acc
     if args.distributed:
@@ -278,6 +283,7 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
 
     end = time.time()
     for data_iter, inputs in enumerate(train_loader):
+    
         optim_iter = data_iter // args.update_freq
 
         # measure data loading time
@@ -293,11 +299,19 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
         # compute output
         with amp.autocast(enabled=not args.disable_amp):
             outputs = model(*inputs)
+            if torch.isnan(outputs['image_embed']).sum()>0 or torch.isnan(outputs['text_embed']).sum()>0 or torch.isnan(outputs['aug1_embed']).sum()>0 or torch.isnan(outputs['aug2_embed']).sum()>0:
+                parameters = [p for p in model.parameters() if p.grad is not None and p.requires_grad]
+                print('nan output - Total grad norm:',total_norm)
+                model.zero_grad(set_to_none=True)
+                exit()
+                continue
             loss_dict = criterion(outputs)
             loss = loss_dict['loss']
             loss /= args.update_freq
+        
 
         if not math.isfinite(loss.item()):
+            
             print("Loss is {}, stopping training".format(loss.item()))
             sys.exit(1)
 
@@ -305,10 +319,18 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
 
         if (data_iter + 1) % args.update_freq != 0:
             continue
-
+        
+        scaler.unscale_(optimizer)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 10000)
         # compute gradient and do SGD step
         scaler.step(optimizer)
         scaler.update()
+        parameters = [p for p in model.parameters() if p.grad is not None and p.requires_grad]
+        if len(parameters) == 0:
+            total_norm = 0.0
+        else:
+            device = parameters[0].grad.device
+            total_norm = torch.norm(torch.stack([torch.norm(p.grad.detach(), 2).to(device) for p in parameters]), 2.0).item()
         model.zero_grad(set_to_none=True)
 
         # clamp logit scale to [0, 100]
@@ -333,6 +355,7 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
                         'scaler': scaler.get_scale(),
                         'logit': logit_scale})
             progress.display(optim_iter)
+            print('Total norm:',total_norm)
 
     progress.synchronize()
     return {**{k: v.avg for k, v in metrics.items()},
