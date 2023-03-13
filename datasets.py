@@ -43,15 +43,18 @@ def yfcc_loader(root, index):
 class ISICValDataset(torch.utils.data.Dataset):
     def __init__(self, val_transform, root, val_path):
         annotations = pd.read_csv(val_path)
-        self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i,'target']) for i in range(len(annotations))]
+        self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i, 'description'], annotations.loc[i,'target']) for i in range(len(annotations))]
         self.root = root
         self.transform = val_transform
+        # self.tokenizer = tokenizer 
     def __getitem__(self, i):
-        image_id, target = self.samples[i]
+        image_id, caption, target = self.samples[i]
         path = os.path.join(self.root, 'full_data/', image_id)
         img = pil_loader(path)
         image = self.transform(img)
-        return image, target
+        # caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
+        
+        return image, caption, target
     def __len__(self):
         return len(self.samples)
 
@@ -136,9 +139,9 @@ class ImageCaptionDatasetCLIP(ImageCaptionDatasetBase):
 
         # tokenize caption
         if self.tokenizer is not None:
-            caption = self.tokenizer(caption)
+            caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
 
-        return image, caption
+        return image, caption['input_ids'][0]
 
 
 class ImageCaptionDatasetSLIP(ImageCaptionDatasetBase):
@@ -155,12 +158,12 @@ class ImageCaptionDatasetSLIP(ImageCaptionDatasetBase):
         image = self.transform(img)
         aug1 = self.augment(img)
         aug2 = self.augment(img)
-
-        # tokenize caption
+        
         if self.tokenizer is not None:
-            caption = self.tokenizer(caption)
-
-        return image, caption, aug1, aug2
+            # caption = self.tokenizer(caption)
+            caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
+        
+        return image, caption['input_ids'][0], aug1, aug2
 
 
 class ImageCaptionDatasetSSL(ImageCaptionDatasetBase):
@@ -236,10 +239,10 @@ def get_downstream_dataset(catalog, name, is_train, transform):
 
 
 def get_dataset(train_transform, tokenizer, args):
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                    #  std=[0.229, 0.224, 0.225])
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
 
-    normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
+    # normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
     augment = transforms.Compose([
         transforms.RandomResizedCrop(384, scale=(0.08, 1.)),
         transforms.RandomApply([

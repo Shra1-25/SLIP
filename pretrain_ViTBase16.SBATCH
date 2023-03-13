@@ -1,14 +1,14 @@
 #!/bin/bash
 #
 #SBATCH --job-name=training
-#SBATCH --gres=gpu:1
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node=2
+#SBATCH --cpus-per-task=5
 #SBATCH --time=20:10:00
-#SBATCH --mem=128GB
+#SBATCH --mem=64GB
 #SBATCH --mail-type=END
-#SBATCH --mail-user= ## Please add your email
-#SBATCH --output=train_Dermatomyositis.out
+#SBATCH --output=train_Dermatomyositis_26_DistilBert.out
 
 module purge
 ## Please change python file name in line 18
@@ -16,8 +16,10 @@ module purge
 singularity exec --nv \
 	    --overlay /scratch/ssc10020/overlay-50G-10M.ext3:ro \
 	    /scratch/work/public/singularity/cuda11.2.2-cudnn8-devel-ubuntu20.04.sif \
-	    /bin/bash -c "source /ext3/miniconda3/bin/activate; conda activate slip; python run_with_submitit.py \
+	    /bin/bash -c "source /ext3/miniconda3/bin/activate; conda activate slip; python main.py \
 		--root /scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/ \
 		--model SLIP_VITB16 \
 		--lr 3e-3 \
-		--wd 0.1 "
+		--wd 0.1 \
+		--resume checkpoint_26_DistilBert.pt \
+		--output-dir /scratch/ssc10020/IndependentStudy/SLIP/SLIP/Best_26_DistilBert"

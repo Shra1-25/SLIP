@@ -1,9 +1,0 @@
-submitit INFO (2023-03-08 21:49:06,950) - Starting with JobEnvironment(job_id=3259352, hostname=gv018.hpc.nyu.edu, local_rank=0(1), node=0(1), global_rank=0(1))
-submitit INFO (2023-03-08 21:49:06,950) - Loading pickle: /scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/3259352/3259352_submitted.pkl
-Process group: 1 tasks, rank: 0
-Not using distributed mode
-=> creating model: SLIP_VITB16
-=> creating dataset
-Namespace(dataset='isic', root='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/', metadata='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/train_split_metadata.csv', output_dir=PosixPath('/scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/3259352'), model='SLIP_VITB16', ssl_mlp_dim=4096, ssl_emb_dim=256, ssl_scale=1.0, ssl_temp=0.1, resume='', epochs=25, warmup_epochs=1, start_epoch=0, batch_size=4, lr=0.003, lr_start=1e-06, lr_end=1e-05, update_freq=1, wd=0.1, betas=(0.9, 0.98), eps=1e-08, eval_freq=1, disable_amp=False, print_freq=10, workers=10, evaluate=False, world_size=1, rank=0, local_rank=0, dist_url='file:///scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/91fe085c91314b098bdbccce716ef2e7_init', dist_backend='nccl', seed=0, gpu=0, wandb=False, ngpus=1, nodes=1, timeout=2800, job_dir=PosixPath('/scratch/ssc10020/IndependentStudy/SLIP/SLIP/checkpoint/experiments/slip/%j'), partition='learnlab', use_volta32=False, comment='', distributed=False)
-=> beginning training
-submitit ERROR (2023-03-08 21:49:19,970) - Submitted job triggered an exception

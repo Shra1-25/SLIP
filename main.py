@@ -56,7 +56,7 @@ def get_args_parser():
     parser.add_argument('--epochs', default=25, type=int)
     parser.add_argument('--warmup-epochs', default=1, type=int)
     parser.add_argument('--start-epoch', default=0, type=int)
-    parser.add_argument('--batch-size', default=4, type=int,
+    parser.add_argument('--batch-size', default=16, type=int,
                         help='number of samples per-device/per-gpu')
     parser.add_argument('--lr', default=3e-3, type=float)
     parser.add_argument('--lr-start', default=1e-6, type=float,
@@ -69,7 +69,7 @@ def get_args_parser():
     parser.add_argument('--betas', default=(0.9, 0.98), nargs=2, type=float)
     parser.add_argument('--eps', default=1e-8, type=float)
     parser.add_argument('--eval-freq', default=1, type=int)
-    parser.add_argument('--disable-amp', action='store_true',
+    parser.add_argument('--disable-amp', action='store_false',
                         help='disable mixed-precision training (requires more memory and compute)')
     # System
     parser.add_argument('--print-freq', default=50, type=int, help='print frequency')
@@ -93,7 +93,8 @@ best_acc1 = 0
 
 
 def main(args):
-    utils.init_distributed_mode(args)
+    # utils.init_distributed_mode(args)
+    args.distributed = False
 
     global best_acc1
 
@@ -163,11 +164,11 @@ def main(args):
 
     # Data loading code
     print("=> creating dataset")
-    tokenizer = SimpleTokenizer()
-    # tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                    #  std=[0.229, 0.224, 0.225])
-    normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
+    # tokenizer = SimpleTokenizer()
+    tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    # normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
     train_transform = transforms.Compose([
             transforms.RandomResizedCrop(384, scale=(0.5, 1.0)),
             transforms.ToTensor(),
@@ -226,8 +227,8 @@ def main(args):
 
     print("=> beginning training")
     for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
+        # if args.distributed:
+            # train_sampler.set_epoch(epoch)
 
         # train for one epoch
         train_stats = train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule, args)
@@ -378,16 +379,16 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
     print('=> encoding captions')
     cwd = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(cwd, 'templates.json')) as f:
-        templates = json.load(f)['imagenet']
+        templates = json.load(f)['isic']
 
     with open(os.path.join(cwd, 'labels.json')) as f:
-        labels = json.load(f)['imagenet']
+        labels = json.load(f)['isic']
 
     with torch.no_grad():
         text_features = []
         for l in labels:
             texts = [t.format(l) for t in templates]
-            texts = tokenizer(texts).cuda(args.gpu, non_blocking=True)
+            texts = tokenizer.encode_plus(texts, max_length=26, padding='max_length', truncation=True, return_tensors='pt')['input_ids'].cuda(args.gpu, non_blocking=True)
             class_embeddings = utils.get_model(model).encode_text(texts)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
             class_embeddings = class_embeddings.mean(dim=0)
@@ -396,7 +397,7 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
         text_features = torch.stack(text_features, dim=0)
 
         end = time.time()
-        for i, (images, target) in enumerate(val_loader):
+        for i, (images, captions, target) in enumerate(val_loader):
             images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
 
@@ -408,7 +409,7 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
             logits_per_image = image_features @ text_features.t()
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(logits_per_image, target, topk=(1, 5))
+            acc1, acc5 = accuracy(logits_per_image, target, topk=(1, 2))
             acc1, acc5 = utils.scaled_all_reduce([acc1, acc5])
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))
@@ -421,9 +422,9 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
                 progress.display(i)
 
     progress.synchronize()
-    print('0-shot * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+    print('0-shot * Acc@1 {top1.avg:.3f} Acc@2 {top5.avg:.3f}'
           .format(top1=top1, top5=top5))
-    return {'acc1': top1.avg, 'acc5': top5.avg}
+    return {'acc1': top1.avg, 'acc2': top5.avg}
 
 
 class AverageMeter(object):

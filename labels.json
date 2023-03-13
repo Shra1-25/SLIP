@@ -4121,5 +4121,9 @@
         "wrestling ring indoor",
         "yard",
         "youth hostel"
+    ],
+    "isic": [
+        "benign",
+        "malignant"
     ]
 }

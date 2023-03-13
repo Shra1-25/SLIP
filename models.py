@@ -264,7 +264,7 @@ def vit_small_mocov3_patch16_384(**kwargs):
 
 def CLIP_VITS16(**kwargs):
     vision_model = timm.create_model('vit_small_mocov3_patch16_384', num_classes=0)
-    model = CLIP(embed_dim=512, vision_width=384, vision_model=vision_model, context_length=77, vocab_size=49408,
+    model = CLIP(embed_dim=512, vision_width=384, vision_model=vision_model, context_length=26, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
@@ -279,7 +279,7 @@ def SIMCLR_VITS16(**kwargs):
 
 def SLIP_VITS16(**kwargs):
     vision_model = timm.create_model('vit_small_mocov3_patch16_384', num_classes=0)
-    model = SLIP(embed_dim=512, vision_width=384, vision_model=vision_model, context_length=77, vocab_size=49408,
+    model = SLIP(embed_dim=512, vision_width=384, vision_model=vision_model, context_length=26, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
@@ -287,7 +287,7 @@ def SLIP_VITS16(**kwargs):
 
 def CLIP_VITB16(**kwargs):
     vision_model = timm.create_model('vit_base_patch16_384', num_classes=0)
-    model = CLIP(embed_dim=512, vision_width=768, vision_model=vision_model, context_length=77, vocab_size=49408,
+    model = CLIP(embed_dim=512, vision_width=768, vision_model=vision_model, context_length=26, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
@@ -302,7 +302,7 @@ def SIMCLR_VITB16(**kwargs):
 
 def SLIP_VITB16(**kwargs):
     vision_model = timm.create_model('vit_base_patch16_384', num_classes=0)
-    model = SLIP(embed_dim=512, vision_width=768, vision_model=vision_model, context_length=77, vocab_size=49408,
+    model = SLIP(embed_dim=512, vision_width=768, vision_model=vision_model, context_length=26, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
@@ -310,7 +310,7 @@ def SLIP_VITB16(**kwargs):
 
 def CLIP_VITL16(**kwargs):
     vision_model = timm.create_model('vit_large_patch16_224', num_classes=0)
-    model = CLIP(embed_dim=512, vision_width=1024, vision_model=vision_model, context_length=77, vocab_size=49408,
+    model = CLIP(embed_dim=512, vision_width=1024, vision_model=vision_model, context_length=26, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
@@ -325,7 +325,7 @@ def SIMCLR_VITL16(**kwargs):
 
 def SLIP_VITL16(**kwargs):
     vision_model = timm.create_model('vit_large_patch16_384', num_classes=0)
-    model = SLIP(embed_dim=512, vision_width=1024, vision_model=vision_model, context_length=77, vocab_size=49408,
+    model = SLIP(embed_dim=512, vision_width=1024, vision_model=vision_model, context_length=26, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
