@@ -41,7 +41,7 @@ def get_args_parser():
                         help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
-    parser.add_argument('-b', '--batch-size', default=128, type=int,
+    parser.add_argument('-b', '--batch-size', default=32, type=int,
                         metavar='N',
                         help='number of samples per-device/per-gpu ')
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
@@ -129,9 +129,9 @@ def main(args):
     assert set(msg.missing_keys) == {"%s.weight" % linear_keyword, "%s.bias" % linear_keyword}
 
     # freeze all layers but the last fc
-    for name, param in model.named_parameters():
-        if name not in ['%s.weight' % linear_keyword, '%s.bias' % linear_keyword]:
-            param.requires_grad = False
+    # for name, param in model.named_parameters():
+    #     if name not in ['%s.weight' % linear_keyword, '%s.bias' % linear_keyword]:
+    #         param.requires_grad = False
     # init the fc layer
     getattr(model, linear_keyword).weight.data.normal_(mean=0.0, std=0.01)
     getattr(model, linear_keyword).bias.data.zero_()
@@ -149,7 +149,7 @@ def main(args):
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    assert len(parameters) == 2  # weight, bias
+    # assert len(parameters) == 2  # weight, bias
 
     optimizer = torch.optim.SGD(parameters, init_lr,
                                 momentum=args.momentum,
@@ -293,8 +293,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     BatchNorm in train mode may revise running mean/std (even if it receives
     no gradient), which are part of the model parameters too.
     """
-    model.eval()
-
+    # model.eval()
+    model.train()
     end = time.time()
     for i, (images, caption, target) in enumerate(train_loader):
         # measure data loading time
@@ -378,8 +378,8 @@ def validate(val_loader, model, criterion, args):
 
 
 def save_checkpoint(state, is_best, output_dir):
-    ckpt_path = f'{output_dir}/linear_checkpoint.pt'
-    best_path = f'{output_dir}/linear_best.pt'
+    ckpt_path = f'{output_dir}/e2e_checkpoint.pt'
+    best_path = f'{output_dir}/e2e_checkpoint_best.pt'
     torch.save(state, ckpt_path)
     if is_best:
         shutil.copyfile(ckpt_path, best_path)

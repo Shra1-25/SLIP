@@ -17,13 +17,15 @@ import torchvision.transforms as transforms
 import datasets
 import models
 from tokenizer import SimpleTokenizer
+from transformers import DistilBertTokenizer
 import utils
+from sklearn.metrics import recall_score 
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser(description='SLIP 0-shot evaluations', add_help=False)
     parser.add_argument('--output-dir', default='./', type=str, help='output dir')
-    parser.add_argument('--batch-size', default=256, type=int, help='batch_size')
+    parser.add_argument('--batch-size', default=16, type=int, help='batch_size')
     parser.add_argument('-j', '--workers', default=10, type=int, metavar='N',
                         help='number of data loading workers per process')
     parser.add_argument('--resume', default='', type=str, help='path to latest checkpoint')
@@ -67,10 +69,10 @@ def main(args):
 
     # Data loading code
     print("=> creating dataset")
-    tokenizer = SimpleTokenizer()
+    tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased") # SimpleTokenizer()
     val_transform = transforms.Compose([
-            transforms.Resize(224),
-            transforms.CenterCrop(224),
+            transforms.Resize(384),
+            transforms.CenterCrop(384),
             lambda x: x.convert('RGB'),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -80,8 +82,9 @@ def main(args):
     results = []
     for d in catalog:
         print('Evaluating {}'.format(d))
-        val_dataset = datasets.get_downstream_dataset(catalog, name=d, is_train=False, transform=val_transform)
-
+        # val_dataset = datasets.get_downstream_dataset(catalog, name=d, is_train=False, transform=val_transform)
+        
+        val_dataset = datasets.ISICValDataset(val_transform, old_args.root, os.path.join(old_args.root, 'test_data.csv'))
         val_loader = torch.utils.data.DataLoader(
             val_dataset, batch_size=args.batch_size, shuffle=False,
             num_workers=args.workers, pin_memory=True, drop_last=False)
@@ -89,10 +92,10 @@ def main(args):
         templates = all_templates[d]
         labels = all_labels[d]
 
-        is_acc = d not in ['aircraft', 'pets', 'caltech101', 'flowers', 'kinetics700_frames', 'hateful_memes']
+        is_acc = True # d not in ['aircraft', 'pets', 'caltech101', 'flowers', 'kinetics700_frames', 'hateful_memes']
 
-        acc_or_outputs = validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc)
-
+        acc_or_outputs = validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc, old_args)
+        # import pdb; pdb.set_trace()
         if d in ['aircraft', 'pets', 'caltech101', 'flowers']:
             metric = mean_per_class(*acc_or_outputs)
         elif d == 'kinetics700_frames':
@@ -101,18 +104,22 @@ def main(args):
             metric = metric.item()
         elif d == 'hateful_memes':
             metric = roc_auc(*acc_or_outputs)
+        elif d == 'isic':
+            # roc_score = roc_auc(*acc_or_outputs[1])
+            acc_score = accuracy(acc_or_outputs[1][0], acc_or_outputs[1][1], topk=(1,5))
+            rec_score = recall_score(acc_or_outputs[1][1], acc_or_outputs[1][0].argmax(dim=1), labels=[0,1,2,3,4,5,6,7], average='micro')
         else:
             metric = acc_or_outputs
 
-        results.append(metric)
+        # results.append(metric)
 
-        print('metric:', metric)
+        print('Accuracy:', acc_score, 'Recall score:', rec_score)
 
     print('all results:')
     for x in results:
         print('{:.1f}'.format(x))
 
-def validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc):
+def validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc, old_args):
     # switch to evaluate mode
     model.eval()
     total_top1 = 0
@@ -124,43 +131,46 @@ def validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc):
     print('=> encoding captions')
     with torch.no_grad():
         text_features = []
+        
         for label in labels:
             if isinstance(label, list):
                 texts = [t.format(l) for t in templates for l in label]
             else:
                 texts = [t.format(label) for t in templates]
-            texts = tokenizer(texts).cuda(non_blocking=True)
-            texts = texts.view(-1, 77).contiguous()
+            # texts = tokenizer(texts).cuda(non_blocking=True)
+            texts = tokenizer.encode_plus(texts[0], max_length=26, padding='max_length', truncation=True, return_tensors='pt')['input_ids'].cuda(old_args.gpu, non_blocking=True)
+            texts = texts.view(-1, 26).contiguous()
             class_embeddings = utils.get_model(model).encode_text(texts)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
             class_embeddings = class_embeddings.mean(dim=0)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
             text_features.append(class_embeddings)
         text_features = torch.stack(text_features, dim=0)
-
-        for images, target in val_loader:
+        
+        for (images, captions, target) in val_loader:
             images = images.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
 
             # encode images
             image_features = utils.get_model(model).encode_image(images)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-
             # cosine similarity as logits
             logits_per_image = image_features @ text_features.t()
-
+            
             if is_acc:
                 # measure accuracy and record loss
                 pred = logits_per_image.argmax(dim=1)
                 correct = pred.eq(target).sum()
                 total_top1 += correct.item()
                 total_images += images.size(0)
+                all_outputs.append(logits_per_image.cpu())
+                all_targets.append(target.cpu())
             else:
                 all_outputs.append(logits_per_image.cpu())
                 all_targets.append(target.cpu())
             
     if is_acc:
-        return 100 * total_top1 / total_images
+        return 100 * total_top1 / total_images, (torch.cat(all_outputs), torch.cat(all_targets))
     else:
         return torch.cat(all_outputs), torch.cat(all_targets)
 

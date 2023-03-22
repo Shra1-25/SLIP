@@ -1,0 +1,7 @@
+=> creating model: SLIP_VITB16
+=> loaded resume checkpoint '../Best_26_DistilBert/checkpoint_best.pt' (epoch 1)
+=> creating dataset
+Evaluating isic
+=> encoding captions
+Accuracy: [tensor([3.4932]), tensor([36.3331])] Recall score: 0.03493191237418591
+all results:

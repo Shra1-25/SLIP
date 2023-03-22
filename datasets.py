@@ -21,7 +21,7 @@ import pandas as pd
 
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
+diagnosis_map = {"NV":0, "SCC":1, "BKL":2, "AK":3, "BCC":4, "MEL":5, "DF":6, "VASC":7}
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
@@ -43,7 +43,7 @@ def yfcc_loader(root, index):
 class ISICValDataset(torch.utils.data.Dataset):
     def __init__(self, val_transform, root, val_path):
         annotations = pd.read_csv(val_path)
-        self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i, 'description'], annotations.loc[i,'target']) for i in range(len(annotations))]
+        self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i, 'description'], annotations.loc[i,'diagnosis']) for i in range(len(annotations))]
         self.root = root
         self.transform = val_transform
         # self.tokenizer = tokenizer 
@@ -52,6 +52,7 @@ class ISICValDataset(torch.utils.data.Dataset):
         path = os.path.join(self.root, 'full_data/', image_id)
         img = pil_loader(path)
         image = self.transform(img)
+        target = diagnosis_map[target]
         # caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
         
         return image, caption, target

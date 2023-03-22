@@ -409,7 +409,7 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
             logits_per_image = image_features @ text_features.t()
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(logits_per_image, target, topk=(1, 2))
+            acc1, acc5 = accuracy(logits_per_image, target, topk=(1, 5))
             acc1, acc5 = utils.scaled_all_reduce([acc1, acc5])
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))

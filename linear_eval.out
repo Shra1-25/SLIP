@@ -1,0 +1,35 @@
+/scratch/ssc10020/.conda/envs/slip/lib/python3.9/site-packages/torch/utils/data/dataloader.py:478: UserWarning: This DataLoader will create 64 worker processes in total. Our suggested max number of worker in current system is 10, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+=> loading checkpoint '../Best_26_DistilBert/checkpoint_best.pt'
+=> creating model 'vit_base_patch16_384'
+=> loading checkpoint '/scratch/ssc10020/IndependentStudy/SLIP/SLIP/linear_checkpoint.pt'
+=> loaded checkpoint '/scratch/ssc10020/IndependentStudy/SLIP/SLIP/linear_checkpoint.pt' (epoch 10)
+Namespace(root='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/', dataset='isic', output_dir='./', arch='vit_base_patch16_384', workers=64, epochs=90, start_epoch=10, batch_size=128, lr=0.1, momentum=0.9, weight_decay=0.0, print_freq=10, eval_freq=10, resume='/scratch/ssc10020/IndependentStudy/SLIP/SLIP/linear_checkpoint.pt', evaluate=False, world_size=1, rank=0, local_rank=0, dist_url='env://', dist_backend='nccl', seed=None, gpu=0, pretrained='../Best_26_DistilBert/checkpoint_best.pt', distributed=False)
+Epoch: [10][  0/127]	Time 26.108 (26.108)	Data 20.881 (20.881)	Loss 3.5503e+01 (3.5503e+01)	Acc@1  47.66 ( 47.66)	Acc@5  96.88 ( 96.88)
+Epoch: [10][ 10/127]	Time  1.880 ( 4.042)	Data  0.000 ( 1.898)	Loss 2.9296e+01 (3.7542e+01)	Acc@1  17.19 ( 42.33)	Acc@5  97.66 ( 90.13)
+Epoch: [10][ 20/127]	Time  1.889 ( 2.996)	Data  0.000 ( 0.994)	Loss 1.9241e+01 (2.9268e+01)	Acc@1  52.34 ( 36.87)	Acc@5  92.97 ( 86.46)
+Epoch: [10][ 30/127]	Time  1.894 ( 2.625)	Data  0.000 ( 0.674)	Loss 2.2635e+01 (2.7681e+01)	Acc@1  25.78 ( 35.96)	Acc@5  92.19 ( 88.46)
+Epoch: [10][ 40/127]	Time  1.842 ( 2.436)	Data  0.000 ( 0.509)	Loss 1.7579e+01 (2.5551e+01)	Acc@1  50.00 ( 36.55)	Acc@5  93.75 ( 89.96)
+Epoch: [10][ 50/127]	Time  1.810 ( 2.323)	Data  0.000 ( 0.411)	Loss 1.8020e+01 (2.4060e+01)	Acc@1  16.41 ( 35.91)	Acc@5  91.41 ( 89.83)
+Epoch: [10][ 60/127]	Time  1.813 ( 2.239)	Data  0.000 ( 0.344)	Loss 4.4697e+01 (2.4557e+01)	Acc@1  48.44 ( 35.75)	Acc@5  95.31 ( 90.75)
+Epoch: [10][ 70/127]	Time  1.814 ( 2.180)	Data  0.000 ( 0.295)	Loss 4.6699e+00 (2.4466e+01)	Acc@1  45.31 ( 35.43)	Acc@5  97.66 ( 90.97)
+Epoch: [10][ 80/127]	Time  1.820 ( 2.135)	Data  0.000 ( 0.259)	Loss 2.2027e+01 (2.4163e+01)	Acc@1  34.38 ( 35.21)	Acc@5  94.53 ( 91.53)
+Epoch: [10][ 90/127]	Time  1.823 ( 2.100)	Data  0.000 ( 0.231)	Loss 2.5438e+01 (2.3456e+01)	Acc@1   5.47 ( 34.84)	Acc@5  57.03 ( 90.88)
+Epoch: [10][100/127]	Time  1.822 ( 2.073)	Data  0.000 ( 0.208)	Loss 3.4709e+01 (2.4270e+01)	Acc@1   9.38 ( 34.36)	Acc@5  95.31 ( 90.28)
+Epoch: [10][110/127]	Time  1.822 ( 2.050)	Data  0.000 ( 0.189)	Loss 1.5199e+01 (2.4038e+01)	Acc@1  37.50 ( 34.46)	Acc@5  92.19 ( 90.51)
+Epoch: [10][120/127]	Time  1.824 ( 2.032)	Data  0.000 ( 0.173)	Loss 3.2316e+01 (2.3938e+01)	Acc@1  10.16 ( 34.36)	Acc@5  95.31 ( 90.75)
+Epoch: [11][  0/127]	Time 12.271 (12.271)	Data 10.435 (10.435)	Loss 3.1178e+01 (3.1178e+01)	Acc@1  50.00 ( 50.00)	Acc@5  95.31 ( 95.31)
+Epoch: [11][ 10/127]	Time  1.941 ( 3.303)	Data  0.088 ( 1.452)	Loss 5.4060e+01 (4.1453e+01)	Acc@1  52.34 ( 36.29)	Acc@5  96.88 ( 96.24)
+Epoch: [11][ 20/127]	Time  1.854 ( 2.621)	Data  0.000 ( 0.761)	Loss 3.7854e+01 (4.8098e+01)	Acc@1  21.09 ( 35.31)	Acc@5  89.06 ( 91.67)
+Epoch: [11][ 30/127]	Time  1.859 ( 2.378)	Data  0.000 ( 0.515)	Loss 6.3918e+01 (4.9133e+01)	Acc@1  12.50 ( 34.68)	Acc@5  87.50 ( 88.51)
+Epoch: [11][ 40/127]	Time  1.822 ( 2.244)	Data  0.000 ( 0.390)	Loss 2.0893e+01 (4.6601e+01)	Acc@1  45.31 ( 35.99)	Acc@5  85.16 ( 86.57)
+Epoch: [11][ 50/127]	Time  1.821 ( 2.161)	Data  0.000 ( 0.313)	Loss 6.0761e+01 (4.4275e+01)	Acc@1  19.53 ( 34.88)	Acc@5  67.97 ( 85.60)
+Epoch: [11][ 60/127]	Time  1.821 ( 2.105)	Data  0.000 ( 0.262)	Loss 1.9976e+01 (4.2196e+01)	Acc@1  11.72 ( 34.94)	Acc@5  71.09 ( 84.13)
+Epoch: [11][ 70/127]	Time  1.822 ( 2.065)	Data  0.000 ( 0.225)	Loss 2.8207e+01 (3.9268e+01)	Acc@1   5.47 ( 34.67)	Acc@5  97.66 ( 85.45)
+Epoch: [11][ 80/127]	Time  1.821 ( 2.035)	Data  0.000 ( 0.197)	Loss 1.6339e+01 (3.8569e+01)	Acc@1  54.69 ( 34.87)	Acc@5  98.44 ( 86.62)
+Epoch: [11][ 90/127]	Time  1.821 ( 2.012)	Data  0.000 ( 0.176)	Loss 2.0575e+01 (3.9722e+01)	Acc@1  15.62 ( 34.33)	Acc@5  92.97 ( 87.00)
+Epoch: [11][100/127]	Time  1.823 ( 1.993)	Data  0.000 ( 0.158)	Loss 1.5372e+01 (3.8230e+01)	Acc@1  49.22 ( 34.55)	Acc@5  96.88 ( 87.02)
+Epoch: [11][110/127]	Time  1.822 ( 1.978)	Data  0.000 ( 0.144)	Loss 1.9163e+01 (3.7555e+01)	Acc@1  15.62 ( 34.22)	Acc@5  96.09 ( 87.83)
+Epoch: [11][120/127]	Time  1.822 ( 1.965)	Data  0.000 ( 0.132)	Loss 2.6652e+01 (3.7160e+01)	Acc@1  56.25 ( 34.32)	Acc@5  96.88 ( 88.40)
+/bin/bash: line 1: 3263053 Killed                  python main_linear.py --pretrained ../Best_26_DistilBert/checkpoint_best.pt --arch vit_base_patch16_384 --resume /scratch/ssc10020/IndependentStudy/SLIP/SLIP/linear_checkpoint.pt
+slurmstepd: error: Detected 3 oom-kill event(s) in StepId=30996771.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.

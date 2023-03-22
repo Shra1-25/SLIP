@@ -4123,7 +4123,13 @@
         "youth hostel"
     ],
     "isic": [
-        "benign",
-        "malignant"
+        "NV",
+        "SCC",
+        "BKL",
+        "AK",
+        "BCC",
+        "MEL",
+        "DF",
+        "VASC"
     ]
 }

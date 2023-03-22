@@ -278,7 +278,6 @@
         "a photo of the {}."
     ],
     "isic": [
-        "a photo of a {}.",
-        "a photo of a {}."
+        "The patient has {} skin lesion."
     ]
 }
