@@ -294,7 +294,7 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
         it = iters_per_epoch * epoch + optim_iter  # global training iteration
         for k, param_group in enumerate(optimizer.param_groups):
             param_group['lr'] = lr_schedule[it]
-
+        
         inputs = [tensor.cuda(args.gpu, non_blocking=True) for tensor in inputs]
 
         # compute output

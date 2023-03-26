@@ -235,6 +235,66 @@ class SLIP(CLIP):
                 'aug2_embed': aug2_embed}
 
 
+class LanguageAndVisionConcat(torch.nn.Module):
+    def __init__(self, embed_module, language_feature_dim=256, vision_feature_dim=256, fusion_output_size=128, dropout_p=0.1, num_classes=8):
+        super().__init__()
+        self.embed_module = embed_module
+        self.language_adder=nn.Linear(512,256)
+        nn.init.normal_(self.language_adder.weight, mean=0.0, std=0.01)
+        nn.init.normal_(self.language_adder.bias, mean=0.0, std=0.01)
+        self.vision_adder=nn.Linear(512,256)
+        nn.init.normal_(self.vision_adder.weight, mean=0.0, std=0.01)
+        nn.init.normal_(self.vision_adder.bias, mean=0.0, std=0.01)
+        self.fusion = torch.nn.Linear(
+            in_features=(language_feature_dim + vision_feature_dim),
+            out_features=fusion_output_size
+        )
+        nn.init.normal_(self.fusion.weight, mean=0.0, std=0.01)
+        nn.init.normal_(self.fusion.bias, mean=0.0, std=0.01)
+        self.fc = torch.nn.Linear(
+            in_features=fusion_output_size,
+            out_features=num_classes
+        )
+        nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
+        nn.init.normal_(self.fc.bias, mean=0.0, std=0.01)
+    def mean_pooling(self,model_output, attention_mask):
+        """
+        Mean Pooling - Take attention mask into account for correct averaging
+        Reference: https://www.sbert.net/docs/usage/computing_sentence_embeddings.html
+        """
+        
+        token_embeddings = model_output #First element of model_output contains all token embeddings
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+        sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
+        sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+        return sum_embeddings / sum_mask
+    def forward(self, x):
+        # import pdb; pdb.set_trace()
+        x[1]['input_ids'] = x[1]['input_ids'].squeeze(1)
+        x[1]['attention_mask'] = x[1]['attention_mask'].squeeze(1)
+        outputs = self.embed_module(x[0], x[1]['input_ids'], x[2], x[3])
+        if outputs['image_embed'].isnan().sum():
+            print("image embed module outputs are nan.")
+            import pdb; pdb.set_trace()
+        if outputs['text_embed'].isnan().sum():
+            print("text embed module outputs are nan.")
+            import pdb; pdb.set_trace()
+        # language_op1=self.mean_pooling(outputs['text_embed'],x[1]['attention_mask'])
+        language_op = self.language_adder(outputs['text_embed'])
+        # vision_op1=self.vision_module(x['image_name'])
+        vision_op = self.vision_adder(outputs['image_embed'])
+        combined = torch.cat(
+            [language_op, vision_op], dim=1
+        )
+        fused = torch.nn.functional.relu(
+            self.fusion(combined)
+            )
+        logits = self.fc(fused)
+        #pred = torch.nn.functional.softmax(logits)
+        return logits
+
+
+
 def get_loss(model, ssl_temp, ssl_scale):
     if model.startswith('SLIP'):
         ssl_loss = losses.SIMCLRLoss(temperature=ssl_temp)

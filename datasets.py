@@ -59,6 +59,45 @@ class ISICValDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.samples)
 
+class ISICE2ETrainDataset(torch.utils.data.Dataset):
+    def __init__(self, transform, root, val_path, tokenizer):
+        annotations = pd.read_csv(val_path)
+        self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i, 'description'], annotations.loc[i,'diagnosis']) for i in range(len(annotations))]
+        self.root = root
+        self.transform = transform
+        self.tokenizer = tokenizer 
+
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+        # normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
+        self.augment = transforms.Compose([
+            transforms.RandomResizedCrop(384, scale=(0.08, 1.)),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+            ], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([utils.GaussianBlur([.1, 2.])], p=0.5),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+    def __getitem__(self, i):
+        image_id, caption, target = self.samples[i]
+        path = os.path.join(self.root, 'full_data/', image_id)
+        img = pil_loader(path)
+        image = self.transform(img)
+        target = diagnosis_map[target]
+        caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
+        
+        aug1 = self.augment(img)
+        aug2 = self.augment(img)
+
+        return image, caption, target, aug1, aug2
+    def __len__(self):
+        return len(self.samples)
+
 
 class ImageCaptionDatasetBase(torch.utils.data.Dataset):
     def __init__(self, dataset, root, metadata):
@@ -164,8 +203,8 @@ class ImageCaptionDatasetSLIP(ImageCaptionDatasetBase):
             # caption = self.tokenizer(caption)
             caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
         
-        return image, caption['input_ids'][0], aug1, aug2
-
+        # return image, caption['input_ids'][0], aug1, aug2
+        return image, caption, aug1, aug2
 
 class ImageCaptionDatasetSSL(ImageCaptionDatasetBase):
     def __init__(self, dataset, root, metadata, augment):
