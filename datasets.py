@@ -41,26 +41,27 @@ def yfcc_loader(root, index):
     return img.convert('RGB')
 
 class ISICValDataset(torch.utils.data.Dataset):
-    def __init__(self, val_transform, root, val_path):
+    def __init__(self, val_transform, root, val_path, context_length=26):
         annotations = pd.read_csv(val_path)
         self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i, 'description'], annotations.loc[i,'diagnosis']) for i in range(len(annotations))]
         self.root = root
         self.transform = val_transform
         # self.tokenizer = tokenizer 
+        self.context_length=context_length
     def __getitem__(self, i):
         image_id, caption, target = self.samples[i]
         path = os.path.join(self.root, 'full_data/', image_id)
         img = pil_loader(path)
         image = self.transform(img)
         target = diagnosis_map[target]
-        # caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
+        # caption = self.tokenizer.encode_plus(caption, max_length=self.context_length, padding='max_length', truncation=True, return_tensors='pt')
         
         return image, caption, target
     def __len__(self):
         return len(self.samples)
 
 class ISICE2ETrainDataset(torch.utils.data.Dataset):
-    def __init__(self, transform, root, val_path, tokenizer):
+    def __init__(self, transform, root, val_path, tokenizer, context_length=26):
         annotations = pd.read_csv(val_path)
         self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i, 'description'], annotations.loc[i,'diagnosis']) for i in range(len(annotations))]
         self.root = root
@@ -82,6 +83,7 @@ class ISICE2ETrainDataset(torch.utils.data.Dataset):
             transforms.ToTensor(),
             normalize,
         ])
+        self.context_length = context_length
 
     def __getitem__(self, i):
         image_id, caption, target = self.samples[i]
@@ -89,7 +91,7 @@ class ISICE2ETrainDataset(torch.utils.data.Dataset):
         img = pil_loader(path)
         image = self.transform(img)
         target = diagnosis_map[target]
-        caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
+        caption = self.tokenizer.encode_plus(caption, max_length=self.context_length, padding='max_length', truncation=True, return_tensors='pt')
         
         aug1 = self.augment(img)
         aug2 = self.augment(img)
@@ -185,12 +187,13 @@ class ImageCaptionDatasetCLIP(ImageCaptionDatasetBase):
 
 
 class ImageCaptionDatasetSLIP(ImageCaptionDatasetBase):
-    def __init__(self, dataset, root, metadata, transform, augment, tokenizer=None):
+    def __init__(self, dataset, root, metadata, transform, augment, tokenizer=None, context_length=26):
         super().__init__(dataset, root, metadata)
 
         self.transform = transform
         self.augment = augment
         self.tokenizer = tokenizer
+        self.context_length = context_length
 
     def __getitem__(self, i):
         img, caption = self.get_raw_item(i)
@@ -201,10 +204,10 @@ class ImageCaptionDatasetSLIP(ImageCaptionDatasetBase):
         
         if self.tokenizer is not None:
             # caption = self.tokenizer(caption)
-            caption = self.tokenizer.encode_plus(caption, max_length=26, padding='max_length', truncation=True, return_tensors='pt')
+            caption = self.tokenizer.encode_plus(caption, max_length=self.context_length, padding='max_length', truncation=True, return_tensors='pt')
         
         # return image, caption['input_ids'][0], aug1, aug2
-        return image, caption, aug1, aug2
+        return image, caption['input_ids'][0], aug1, aug2
 
 class ImageCaptionDatasetSSL(ImageCaptionDatasetBase):
     def __init__(self, dataset, root, metadata, augment):
@@ -300,4 +303,4 @@ def get_dataset(train_transform, tokenizer, args):
     elif args.model.startswith('CLIP'):
         return ImageCaptionDatasetCLIP(args.dataset, args.root, args.metadata, train_transform, tokenizer)
     elif args.model.startswith('SLIP'):
-        return ImageCaptionDatasetSLIP(args.dataset, args.root, args.metadata, train_transform, augment, tokenizer)
+        return ImageCaptionDatasetSLIP(args.dataset, args.root, args.metadata, train_transform, augment, tokenizer, context_length=args.context_length)

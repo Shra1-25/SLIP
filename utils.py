@@ -61,10 +61,10 @@ def is_main_process():
     return get_rank() == 0
 
 
-def save_on_master(state, is_best, output_dir):
+def save_on_master(state, is_best, output_dir, args):
     if is_main_process():
-        ckpt_path = f'{output_dir}/checkpoint.pt'
-        best_path = f'{output_dir}/checkpoint_best.pt'
+        ckpt_path = f'{output_dir}/'+args.save_model_name_tag+'checkpoint_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt'
+        best_path = f'{output_dir}/'+args.save_model_name_tag+'checkpoint_best_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt'
         torch.save(state, ckpt_path)
         if is_best:
             shutil.copyfile(ckpt_path, best_path)

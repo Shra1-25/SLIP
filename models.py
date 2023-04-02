@@ -128,10 +128,9 @@ class CLIP(nn.Module):
         return mask
 
     def encode_image(self, image):
-        x = self.visual(image)
-        x = x @ self.image_projection
-
-        return x
+        x1 = self.visual(image)
+        x = x1 @ self.image_projection
+        return x, x1
 
     def encode_text(self, text):
         x = self.token_embedding(text)  # [batch_size, n_ctx, d_model]
@@ -143,9 +142,10 @@ class CLIP(nn.Module):
 
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
-        x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
-
-        return x
+        x1 = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] 
+        x = x1 @ self.text_projection
+        
+        return x, x1
 
     def forward(self, image, text):
         image_embed = self.encode_image(image)
@@ -225,24 +225,26 @@ class SLIP(CLIP):
         aug1_embed = self.image_mlp(self.visual(aug1))
         aug2_embed = self.image_mlp(self.visual(aug2))
         
-        image_embed = self.encode_image(image)
-        text_embed = self.encode_text(text)
+        image_embed, prior_img_embed = self.encode_image(image)
+        text_embed, prior_text_embed = self.encode_text(text)
 
         return {'image_embed': image_embed,
                 'text_embed': text_embed,
                 'logit_scale': self.logit_scale.exp(),
                 'aug1_embed': aug1_embed,
-                'aug2_embed': aug2_embed}
+                'aug2_embed': aug2_embed,
+                'prior_img_embed': prior_img_embed,
+                'prior_text_embed':prior_text_embed}
 
 
 class LanguageAndVisionConcat(torch.nn.Module):
     def __init__(self, embed_module, language_feature_dim=256, vision_feature_dim=256, fusion_output_size=128, dropout_p=0.1, num_classes=8):
         super().__init__()
         self.embed_module = embed_module
-        self.language_adder=nn.Linear(512,256)
+        self.language_adder=nn.Linear(1000,300)
         nn.init.normal_(self.language_adder.weight, mean=0.0, std=0.01)
         nn.init.normal_(self.language_adder.bias, mean=0.0, std=0.01)
-        self.vision_adder=nn.Linear(512,256)
+        self.vision_adder=nn.Linear(768,300)
         nn.init.normal_(self.vision_adder.weight, mean=0.0, std=0.01)
         nn.init.normal_(self.vision_adder.bias, mean=0.0, std=0.01)
         self.fusion = torch.nn.Linear(
@@ -361,16 +363,21 @@ def SIMCLR_VITB16(**kwargs):
 
 
 def SLIP_VITB16(**kwargs):
-    vision_model = timm.create_model('vit_base_patch16_384', num_classes=0)
-    model = SLIP(embed_dim=512, vision_width=768, vision_model=vision_model, context_length=26, vocab_size=49408,
-        transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
+    vision_model = timm.create_model('vit_base_patch16_384', pretrained=False, num_classes=1000)
+    model = SLIP(embed_dim=512, vision_width=1000, vision_model=vision_model, vocab_size=49408,
+        transformer_width=768, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model
 
+def SLIP_ResNet50(**kwargs):
+    vision_model = timm.create_model('resnet50', num_classes=1000, pretrained=False)
+    model = SLIP(embed_dim=512, vision_width=1000, vision_model=vision_model, vocab_size=49408,
+        transformer_width=768, transformer_heads=8, transformer_layers=12, **kwargs)
+    return model
 
 def CLIP_VITL16(**kwargs):
     vision_model = timm.create_model('vit_large_patch16_384', num_classes=0)
-    model = CLIP(embed_dim=512, vision_width=1024, vision_model=vision_model, context_length=26, vocab_size=49408,
+    model = CLIP(embed_dim=512, vision_width=1024, vision_model=vision_model, vocab_size=49408,
         transformer_width=512, transformer_heads=8, transformer_layers=12, **kwargs)
 
     return model

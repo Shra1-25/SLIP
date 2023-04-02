@@ -26,6 +26,7 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 from transformers import DistilBertTokenizer
 from sklearn.metrics import recall_score
+from pytorch_lightning import seed_everything
 
 import datasets
 import utils
@@ -75,12 +76,14 @@ def get_args_parser():
                         help='url used to set up distributed training')
     parser.add_argument('--dist-backend', default='nccl', type=str,
                         help='distributed backend')
-    parser.add_argument('--seed', default=None, type=int,
+    parser.add_argument('--seed', default=77, type=int,
                         help='seed for initializing training. ')
     parser.add_argument('--gpu', default=0, type=int,
                         help='GPU id to use.')
     parser.add_argument('--pretrained', default='', type=str,
                         help='path to CLIP pretrained checkpoint')
+    parser.add_argument('--context-length', default=26, type=int, help='maximum length of the token embeddings for text data')
+    parser.add_argument('--save-model-name-tag', default='e2e_w_DBert', type=str)
     return parser
 
 best_acc1 = torch.tensor(0)
@@ -88,19 +91,20 @@ best_acc1 = torch.tensor(0)
 
 def main(args):
     # utils.init_distributed_mode(args)
+    seed_everything(args.seed)
     args.distributed=False
 
     global best_acc1
 
-    if args.seed is not None:
-        random.seed(args.seed)
-        torch.manual_seed(args.seed)
-        cudnn.deterministic = True
-        warnings.warn('You have chosen to seed training. '
-                      'This will turn on the CUDNN deterministic setting, '
-                      'which can slow down your training considerably! '
-                      'You may see unexpected behavior when restarting '
-                      'from checkpoints.')
+    # if args.seed is not None:
+    #     random.seed(args.seed)
+    #     torch.manual_seed(args.seed)
+    #     cudnn.deterministic = True
+    #     warnings.warn('You have chosen to seed training. '
+    #                   'This will turn on the CUDNN deterministic setting, '
+    #                   'which can slow down your training considerably! '
+    #                   'You may see unexpected behavior when restarting '
+    #                   'from checkpoints.')
 
     linear_keyword = 'head'
     if os.path.isfile(args.pretrained):
@@ -134,7 +138,7 @@ def main(args):
     # create model
     print("=> creating model '{}'".format(args.arch))
     # model = timm.models.create_model(args.arch, num_classes=8)
-    slip_model = getattr(models, 'SLIP_VITB16')(ssl_mlp_dim=args.ssl_mlp_dim, ssl_emb_dim=args.ssl_emb_dim)
+    slip_model = getattr(models, 'SLIP_VITB16')(ssl_mlp_dim=args.ssl_mlp_dim, ssl_emb_dim=args.ssl_emb_dim, context_length=args.context_length)
     slip_model.cuda()
     slip_model.load_state_dict(state_dict, strict=True)
     model = LanguageAndVisionConcat(embed_module=slip_model)
@@ -218,9 +222,9 @@ def main(args):
         normalize,
     ])
     tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-    train_dataset = datasets.ISICE2ETrainDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), tokenizer=tokenizer)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
-    val_dataset = datasets.ISICE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), tokenizer=tokenizer) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
-    test_dataset = datasets.ISICE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), tokenizer=tokenizer)
+    train_dataset = datasets.ISICE2ETrainDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), tokenizer=tokenizer, context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
+    val_dataset = datasets.ISICE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), tokenizer=tokenizer, context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
+    test_dataset = datasets.ISICE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), tokenizer=tokenizer, context_length=args.context_length)
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -271,7 +275,7 @@ def main(args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-            }, is_best, args.output_dir)
+            }, is_best, args.output_dir, args)
             if epoch == args.start_epoch:
                 sanity_check(model.state_dict(), args.pretrained, linear_keyword, visual_keyword)
 
@@ -380,11 +384,19 @@ def validate(val_loader, model, criterion, args):
         for i, (images, caption, target, aug1, aug2) in enumerate(val_loader):
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
+                images = images.cuda(args.gpu, non_blocking=True)
+                for k,v in caption.items():
+                    caption[k] = v.cuda()
+                aug1 = aug1.cuda()
+                aug2 = aug2.cuda()
             if torch.cuda.is_available():
                 target = target.cuda(args.gpu, non_blocking=True)
-
+            inputs = [images, caption, aug1, aug2]
             # compute output
-            output = model(images)
+            output = model(inputs)
+            if output.isnan().sum():
+                print("output is nan.")
+                import pdb; pdb.set_trace()
             loss = criterion(output, target)
 
             # measure accuracy and record loss
@@ -410,8 +422,8 @@ def validate(val_loader, model, criterion, args):
 
 
 def save_checkpoint(state, is_best, output_dir):
-    ckpt_path = f'{output_dir}/e2e_checkpoint.pt'
-    best_path = f'{output_dir}/e2e_checkpoint_best.pt'
+    ckpt_path = f'{output_dir}/'+args.save_model_name_tag+'_checkpoint_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt'
+    best_path = f'{output_dir}/'+args.save_model_name_tag+'_checkpoint_best_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt'
     torch.save(state, ckpt_path)
     if is_best:
         shutil.copyfile(ckpt_path, best_path)

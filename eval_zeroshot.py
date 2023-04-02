@@ -22,6 +22,7 @@ import utils
 from sklearn.metrics import recall_score 
 
 
+
 def get_args_parser():
     parser = argparse.ArgumentParser(description='SLIP 0-shot evaluations', add_help=False)
     parser.add_argument('--output-dir', default='./', type=str, help='output dir')
@@ -50,7 +51,7 @@ def main(args):
     old_args = ckpt['args']
     print("=> creating model: {}".format(old_args.model))
     model = getattr(models, old_args.model)(rand_embed=False,
-        ssl_mlp_dim=old_args.ssl_mlp_dim, ssl_emb_dim=old_args.ssl_emb_dim)
+        ssl_mlp_dim=old_args.ssl_mlp_dim, ssl_emb_dim=old_args.ssl_emb_dim, context_length=old_args.context_length)
     model.cuda()
     model.load_state_dict(state_dict, strict=True)
     print("=> loaded resume checkpoint '{}' (epoch {})".format(args.resume, ckpt['epoch']))
@@ -140,7 +141,7 @@ def validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc, o
             # texts = tokenizer(texts).cuda(non_blocking=True)
             texts = tokenizer.encode_plus(texts[0], max_length=26, padding='max_length', truncation=True, return_tensors='pt')['input_ids'].cuda(old_args.gpu, non_blocking=True)
             texts = texts.view(-1, 26).contiguous()
-            class_embeddings = utils.get_model(model).encode_text(texts)
+            class_embeddings, _ = utils.get_model(model).encode_text(texts)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
             class_embeddings = class_embeddings.mean(dim=0)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
@@ -152,7 +153,7 @@ def validate_zeroshot(val_loader, templates, labels, model, tokenizer, is_acc, o
             target = target.cuda(non_blocking=True)
 
             # encode images
-            image_features = utils.get_model(model).encode_image(images)
+            image_features, _ = utils.get_model(model).encode_image(images)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
             # cosine similarity as logits
             logits_per_image = image_features @ text_features.t()

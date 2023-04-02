@@ -24,6 +24,8 @@ import torch.utils.data.distributed
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
+from pytorch_lightning import seed_everything
+import timm
 
 import datasets
 import models
@@ -41,6 +43,7 @@ def get_args_parser():
     parser.add_argument('--metadata', default='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/train_split_metadata.csv', type=str,
                         help='path to metadata file (see README for details)')
     parser.add_argument('--output-dir', default='./', type=str, help='output dir')
+    parser.add_argument('--context-length', default=26, type=int, help='maximum length of the token embeddings for text data')
     # Model
     parser.add_argument('--model', default='SLIP_VITB16', type=str)
     parser.add_argument('--ssl-mlp-dim', default=4096, type=int,
@@ -84,28 +87,32 @@ def get_args_parser():
     parser.add_argument('--dist-url', default='env://', type=str,
                         help='url used to set up distributed training')
     parser.add_argument('--dist-backend', default='nccl', type=str)
-    parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--seed', default=77, type=int)
     parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
     parser.add_argument('--wandb', action='store_true', help='Enable WandB logging')
+    parser.add_argument('--save-model-name-tag', default='pretrain_w_DBert', type=str)
     return parser
 
 best_acc1 = 0
 
 
 def main(args):
+
+    seed_everything(args.seed)
     # utils.init_distributed_mode(args)
     args.distributed = False
 
     global best_acc1
 
-    # fix the seed for reproducibility
-    seed = args.seed + utils.get_rank()
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+    # # fix the seed for reproducibility
+    # seed = args.seed + utils.get_rank()
+    # torch.manual_seed(seed)
+    # np.random.seed(seed)
 
     # create model
     print("=> creating model: {}".format(args.model))
-    model = getattr(models, args.model)(ssl_mlp_dim=args.ssl_mlp_dim, ssl_emb_dim=args.ssl_emb_dim)
+    
+    model = getattr(models, args.model)(ssl_mlp_dim=args.ssl_mlp_dim, ssl_emb_dim=args.ssl_emb_dim, context_length=args.context_length)
     model.cuda(args.gpu)
 
     if args.distributed:
@@ -186,7 +193,7 @@ def main(args):
     # with open(os.path.join(cwd, 'dataset_catalog.json')) as f:
         # root = json.load(f)['imagenet']['path']
     # val_dataset = ImageFolder(os.path.join(args.root, 'val'), val_transform)
-    val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'))
+    val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length)
     
     # dist eval resamples data to pad uneven batch sizes
     # make sure num_samples = 0 mod num_gpus for exact acc
@@ -254,7 +261,7 @@ def main(args):
                 'scaler': scaler.state_dict(),
                 'best_acc1': best_acc1,
                 'args': args,
-            }, is_best, args.output_dir)
+            }, is_best, args.output_dir, args)
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'test_{k}': v for k, v in val_stats.items()},
@@ -389,7 +396,7 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
         for l in labels:
             texts = [t.format(l) for t in templates]
             texts = tokenizer.encode_plus(texts, max_length=26, padding='max_length', truncation=True, return_tensors='pt')['input_ids'].cuda(args.gpu, non_blocking=True)
-            class_embeddings = utils.get_model(model).encode_text(texts)
+            class_embeddings, _ = utils.get_model(model).encode_text(texts)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
             class_embeddings = class_embeddings.mean(dim=0)
             class_embeddings = class_embeddings / class_embeddings.norm(dim=-1, keepdim=True)
@@ -402,7 +409,7 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
             target = target.cuda(args.gpu, non_blocking=True)
 
             # encode images
-            image_features = utils.get_model(model).encode_image(images)
+            image_features, _ = utils.get_model(model).encode_image(images)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
             # cosine similarity as logits

@@ -8,7 +8,7 @@
 #SBATCH --time=20:10:00
 #SBATCH --mem=64GB
 #SBATCH --mail-type=END
-#SBATCH --output=train_Dermatomyositis_26_DistilBert.out
+#SBATCH --output=eval_zeroshot_ResNet50_checkpoint_seed_4804_context_length_26.out
 
 module purge
 ## Please change python file name in line 18
@@ -16,10 +16,5 @@ module purge
 singularity exec --nv \
 	    --overlay /scratch/ssc10020/overlay-50G-10M.ext3:ro \
 	    /scratch/work/public/singularity/cuda11.2.2-cudnn8-devel-ubuntu20.04.sif \
-	    /bin/bash -c "source /ext3/miniconda3/bin/activate; conda activate slip; python main.py \
-		--root /scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/ \
-		--model SLIP_VITB16 \
-		--lr 3e-3 \
-		--wd 0.1 \
-		--resume checkpoint_26_DistilBert.pt \
-		--output-dir /scratch/ssc10020/IndependentStudy/SLIP/SLIP/Best_26_DistilBert"
+	    /bin/bash -c "source /ext3/miniconda3/bin/activate; conda activate slip; python eval_zeroshot.py \
+		--resume /scratch/ssc10020/IndependentStudy/SLIP/pretrain_ResNet50_checkpoint_seed_4804_context_length_26/pretrain_ResNet50checkpoint_best_seed_4804_context_len_26.pt"
