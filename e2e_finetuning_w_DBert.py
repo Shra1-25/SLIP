@@ -384,7 +384,6 @@ def validate(val_loader, model, criterion, args):
         for i, (images, caption, target, aug1, aug2) in enumerate(val_loader):
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
-                images = images.cuda(args.gpu, non_blocking=True)
                 for k,v in caption.items():
                     caption[k] = v.cuda()
                 aug1 = aug1.cuda()

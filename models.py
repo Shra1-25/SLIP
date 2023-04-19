@@ -238,13 +238,13 @@ class SLIP(CLIP):
 
 
 class LanguageAndVisionConcat(torch.nn.Module):
-    def __init__(self, embed_module, language_feature_dim=256, vision_feature_dim=256, fusion_output_size=128, dropout_p=0.1, num_classes=8):
+    def __init__(self, embed_module, language_feature_dim=300, vision_feature_dim=300, fusion_output_size=256, dropout_p=0.1, num_classes=3):
         super().__init__()
         self.embed_module = embed_module
-        self.language_adder=nn.Linear(1000,300)
+        self.language_adder=nn.Linear(512,300)
         nn.init.normal_(self.language_adder.weight, mean=0.0, std=0.01)
         nn.init.normal_(self.language_adder.bias, mean=0.0, std=0.01)
-        self.vision_adder=nn.Linear(768,300)
+        self.vision_adder=nn.Linear(512,300)
         nn.init.normal_(self.vision_adder.weight, mean=0.0, std=0.01)
         nn.init.normal_(self.vision_adder.bias, mean=0.0, std=0.01)
         self.fusion = torch.nn.Linear(

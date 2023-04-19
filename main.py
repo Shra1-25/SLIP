@@ -37,7 +37,7 @@ import utils
 def get_args_parser():
     parser = argparse.ArgumentParser(description='SLIP training and evaluation', add_help=False)
     # Data
-    parser.add_argument('--dataset', default='isic', type=str, choices=['yfcc15m', 'cc3m', 'cc12m', 'coco', 'redcaps'])
+    parser.add_argument('--dataset', default='isic', type=str, choices=['isic', 'cbis', 'yfcc15m', 'cc3m', 'cc12m', 'coco', 'redcaps'])
     parser.add_argument('--root', default='', type=str,
                         help='path to dataset root')
     parser.add_argument('--metadata', default='/scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/train_split_metadata.csv', type=str,
@@ -193,7 +193,7 @@ def main(args):
     # with open(os.path.join(cwd, 'dataset_catalog.json')) as f:
         # root = json.load(f)['imagenet']['path']
     # val_dataset = ImageFolder(os.path.join(args.root, 'val'), val_transform)
-    val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length)
+    val_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length)
     
     # dist eval resamples data to pad uneven batch sizes
     # make sure num_samples = 0 mod num_gpus for exact acc
@@ -374,7 +374,7 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
 def validate_zeroshot(val_loader, model, tokenizer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
+    top5 = AverageMeter('Acc@3', ':6.2f')
     progress = ProgressMeter(
         len(val_loader),
         [batch_time, top1, top5],
@@ -386,10 +386,10 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
     print('=> encoding captions')
     cwd = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(cwd, 'templates.json')) as f:
-        templates = json.load(f)['isic']
+        templates = json.load(f)[args.dataset]
 
     with open(os.path.join(cwd, 'labels.json')) as f:
-        labels = json.load(f)['isic']
+        labels = json.load(f)[args.dataset]
 
     with torch.no_grad():
         text_features = []
@@ -416,7 +416,7 @@ def validate_zeroshot(val_loader, model, tokenizer, args):
             logits_per_image = image_features @ text_features.t()
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(logits_per_image, target, topk=(1, 5))
+            acc1, acc5 = accuracy(logits_per_image, target, topk=(1, 3))
             acc1, acc5 = utils.scaled_all_reduce([acc1, acc5])
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))

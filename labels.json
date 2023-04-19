@@ -4131,5 +4131,10 @@
         "MEL",
         "DF",
         "VASC"
+    ],
+    "cbis":[
+        "MALIGNANT",
+        "BENIGN",
+        "BENIGN_WITHOUT_CALLBACK"
     ]
 }

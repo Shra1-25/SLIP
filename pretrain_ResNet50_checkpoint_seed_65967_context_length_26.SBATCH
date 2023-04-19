@@ -8,7 +8,7 @@
 #SBATCH --time=20:10:00
 #SBATCH --mem=64GB
 #SBATCH --mail-type=END
-#SBATCH --output=pretrain_ResNet50_checkpoint_seed_65967_context_length_26.out
+#SBATCH --output=pretrain_CBIS_ResNet50_checkpoint_seed_65967_context_length_26_lr_1e-4_wd_1e-6.out
 
 module purge
 ## Please change python file name in line 18
@@ -17,12 +17,13 @@ singularity exec --nv \
 	    --overlay /scratch/ssc10020/overlay-50G-10M.ext3:ro \
 	    /scratch/work/public/singularity/cuda11.2.2-cudnn8-devel-ubuntu20.04.sif \
 	    /bin/bash -c "source /ext3/miniconda3/bin/activate; conda activate slip; python main.py \
-		--root /scratch/ssc10020/IndependentStudy/SLIP/dataset/ISIC/ \
+		--root /scratch/ssc10020/IndependentStudy/SLIP/dataset/CBIS_DDSM/ \
+		--dataset cbis \
 		--model SLIP_ResNet50 \
 		--seed 65967 \
-		--lr 3e-3 \
-		--wd 0.1 \
-		--resume pretrain_ResNet50_checkpoint_seed_65967_context_length_26.pt \
-		--save-model-name-tag pretrain_ResNet50 \
+		--lr 1e-4 \
+		--wd 1e-6 \
+		--resume pretrain_CBIS_ResNet50_checkpoint_seed_65967_context_length_26_lr_1e-4_wd_1e-6.pt \
+		--save-model-name-tag pretrain_CBIS_ResNet50_lr_1e-4_wd_1e-6 \
 		--context-length 26 \
-		--output-dir /scratch/ssc10020/IndependentStudy/SLIP/pretrain_ResNet50_checkpoint_seed_65967_context_length_26"
+		--output-dir /scratch/ssc10020/IndependentStudy/SLIP/pretrain_CBIS_ResNet50_checkpoint_seed_65967_context_length_26"

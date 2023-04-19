@@ -20,6 +20,7 @@ from tokenizer import SimpleTokenizer
 from transformers import DistilBertTokenizer
 import utils
 from sklearn.metrics import recall_score 
+from torchmetrics import AUROC 
 
 
 
@@ -59,8 +60,9 @@ def main(args):
     cudnn.benchmark = True
 
     cwd = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(cwd, 'dataset_catalog.json')) as f:
-        catalog = json.load(f)
+    # with open(os.path.join(cwd, 'dataset_catalog.json')) as f:
+    #     catalog = json.load(f)
+    catalog = [old_args.dataset]
 
     with open(os.path.join(cwd, 'templates.json')) as f:
         all_templates = json.load(f)
@@ -85,7 +87,7 @@ def main(args):
         print('Evaluating {}'.format(d))
         # val_dataset = datasets.get_downstream_dataset(catalog, name=d, is_train=False, transform=val_transform)
         
-        val_dataset = datasets.ISICValDataset(val_transform, old_args.root, os.path.join(old_args.root, 'test_data.csv'))
+        val_dataset = datasets.CBISValDataset(val_transform, old_args.root, os.path.join(old_args.root, 'test_data.csv'))
         val_loader = torch.utils.data.DataLoader(
             val_dataset, batch_size=args.batch_size, shuffle=False,
             num_workers=args.workers, pin_memory=True, drop_last=False)
@@ -100,21 +102,22 @@ def main(args):
         if d in ['aircraft', 'pets', 'caltech101', 'flowers']:
             metric = mean_per_class(*acc_or_outputs)
         elif d == 'kinetics700_frames':
-            top1, top5 = accuracy(*acc_or_outputs, topk=(1, 5))
+            top1, top5 = accuracy(*acc_or_outputs, topk=(1, 3))
             metric = (top1 + top5) / 2
             metric = metric.item()
         elif d == 'hateful_memes':
             metric = roc_auc(*acc_or_outputs)
-        elif d == 'isic':
+        elif d == 'isic' or d == "cbis":
             # roc_score = roc_auc(*acc_or_outputs[1])
-            acc_score = accuracy(acc_or_outputs[1][0], acc_or_outputs[1][1], topk=(1,5))
+            acc_score = accuracy(acc_or_outputs[1][0], acc_or_outputs[1][1], topk=(1,3))
             rec_score = recall_score(acc_or_outputs[1][1], acc_or_outputs[1][0].argmax(dim=1), labels=[0,1,2,3,4,5,6,7], average='micro')
+            auc_score = AUROC(task='multiclass', num_classes=3)(acc_or_outputs[1][0], acc_or_outputs[1][1])
         else:
             metric = acc_or_outputs
 
         # results.append(metric)
 
-        print('Accuracy:', acc_score, 'Recall score:', rec_score)
+        print('Accuracy:', acc_score, 'Recall score:', rec_score, 'AUROC multiclass:', auc_score)
 
     print('all results:')
     for x in results:

@@ -22,6 +22,10 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
+from models import LanguageAndVisionConcat
+import models
+from collections import OrderedDict
+from transformers import DistilBertTokenizer
 from sklearn.metrics import recall_score
 from pytorch_lightning import seed_everything
 from torchmetrics import AUROC
@@ -44,7 +48,7 @@ def get_args_parser():
                         help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
-    parser.add_argument('-b', '--batch-size', default=32, type=int,
+    parser.add_argument('-b', '--batch-size', default=16, type=int,
                         metavar='N',
                         help='number of samples per-device/per-gpu ')
     parser.add_argument('--num-classes', default=8, type=int)
@@ -52,6 +56,11 @@ def get_args_parser():
                         metavar='LR', help='initial (base) learning rate', dest='lr')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
+    parser.add_argument('--model', default='SLIP_VITB16', type=str)
+    parser.add_argument('--ssl-mlp-dim', default=4096, type=int,
+                        help='hidden dim of SimCLR mlp projection head')
+    parser.add_argument('--ssl-emb-dim', default=256, type=int,
+                        help='output embed dim of SimCLR mlp projection head')
     parser.add_argument('--wd', '--weight-decay', default=0., type=float,
                         metavar='W', help='weight decay (default: 0.)',
                         dest='weight_decay')
@@ -118,33 +127,47 @@ def main(args):
         visual_keyword = 'visual.'
 
         # rename CLIP pre-trained keys
-        state_dict = checkpoint['state_dict']
-        for k in list(state_dict.keys()):
-            # retain only base_encoder up to before the embedding layer
-            if k.startswith(visual_keyword) and not k.startswith(visual_keyword + linear_keyword):
-                # remove prefix
-                state_dict[k[len(visual_keyword):]] = state_dict[k]
-            # delete renamed or unused k
-            del state_dict[k]
+        ckpt = torch.load(args.pretrained, map_location='cpu')
+        state_dict = OrderedDict()
+        for k, v in ckpt['state_dict'].items():
+            state_dict[k.replace('module.', '')] = v
+        
+        # state_dict = checkpoint['state_dict']
+        # for k in list(state_dict.keys()):
+        #     # retain only base_encoder up to before the embedding layer
+        #     if k.startswith(visual_keyword) and not k.startswith(visual_keyword + linear_keyword):
+        #         # remove prefix
+        #         state_dict[k[len(visual_keyword):]] = state_dict[k]
+        #     # delete renamed or unused k
+        #     del state_dict[k]
     else:
         raise Exception('Missing pretrained model checkpoint: {}'.format(args.pretrained))
 
     # create model
     print("=> creating model '{}'".format(args.arch))
-    model = timm.models.create_model(args.arch, num_classes=args.num_classes)
+    # slip_model = timm.models.create_model(args.arch, num_classes=args.num_classes)
+    slip_model = getattr(models, args.model)(ssl_mlp_dim=args.ssl_mlp_dim, ssl_emb_dim=args.ssl_emb_dim, context_length=args.context_length)
+    slip_model.cuda()
+    slip_model.load_state_dict(state_dict, strict=True)
+
+    for name,param in slip_model.named_parameters():
+        param.requires_grad = False
+
+    model = LanguageAndVisionConcat(embed_module=slip_model, num_classes=args.num_classes)
+    
     # import pdb; pdb.set_trace()
     args.start_epoch = 0
-    msg = model.load_state_dict(state_dict, strict=False)
+    # msg = model.load_state_dict(state_dict, strict=False)
     
-    assert set(msg.missing_keys) == {"%s.weight" % linear_keyword, "%s.bias" % linear_keyword}
+    # assert set(msg.missing_keys) == {"%s.weight" % linear_keyword, "%s.bias" % linear_keyword}
 
-    # freeze all layers but the last fc
-    for name, param in model.named_parameters():
-        if name not in ['%s.weight' % linear_keyword, '%s.bias' % linear_keyword]:
-            param.requires_grad = False
-    # init the fc layer
-    getattr(model, linear_keyword).weight.data.normal_(mean=0.0, std=0.01)
-    getattr(model, linear_keyword).bias.data.zero_()
+    # # freeze all layers but the last fc
+    # for name, param in model.named_parameters():
+    #     if name not in ['%s.weight' % linear_keyword, '%s.bias' % linear_keyword]:
+    #         param.requires_grad = False
+    # # init the fc layer
+    # getattr(model, linear_keyword).weight.data.normal_(mean=0.0, std=0.01)
+    # getattr(model, linear_keyword).bias.data.zero_()
 
     init_lr = args.lr * int(args.batch_size / utils.get_world_size()) / 256
     args.workers = int((args.workers + utils.get_world_size() - 1) / utils.get_world_size())
@@ -159,7 +182,7 @@ def main(args):
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    assert len(parameters) == 2  # weight, bias
+    # assert len(parameters) == 2  # weight, bias
 
     optimizer = torch.optim.SGD(parameters, init_lr,
                                 momentum=args.momentum,
@@ -211,10 +234,15 @@ def main(args):
         transforms.ToTensor(),
         normalize,
     ])
-
-    train_dataset = datasets.CBISValDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
-    val_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
-    test_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), context_length=args.context_length)
+    tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    if args.dataset=='isic':
+        train_dataset = datasets.ISICE2ETrainDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), tokenizer=tokenizer, context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
+        val_dataset = datasets.ISICE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), tokenizer=tokenizer, context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
+        test_dataset = datasets.ISICE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), tokenizer=tokenizer, context_length=args.context_length)
+    elif args.dataset=='cbis':
+        train_dataset = datasets.CBISE2ETrainDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), tokenizer=tokenizer, context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
+        val_dataset = datasets.CBISE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), tokenizer=tokenizer, context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
+        test_dataset = datasets.CBISE2ETrainDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), tokenizer=tokenizer, context_length=args.context_length)
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -306,21 +334,27 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.eval()
 
     end = time.time()
-    for i, (images, caption, target) in enumerate(train_loader):
+    for i, (images, caption, target, aug1, aug2) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
+            for k,v in caption.items():
+                caption[k] = v.cuda()
+            aug1 = aug1.cuda()
+            aug2 = aug2.cuda()
         if torch.cuda.is_available():
             target = target.cuda(args.gpu, non_blocking=True)
 
+        inputs = [images, caption, aug1, aug2]
+
         # compute output
-        output = model(images)
+        output = model(inputs)
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 3))
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
         top1.update(acc1.item(), images.size(0))
         top5.update(acc5.item(), images.size(0))
@@ -355,18 +389,24 @@ def validate(val_loader, model, criterion, args):
 
     with torch.no_grad():
         end = time.time()
-        for i, (images, caption, target) in enumerate(val_loader):
+        for i, (images, caption, target, aug1, aug2) in enumerate(val_loader):
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
+                for k,v in caption.items():
+                    caption[k] = v.cuda()
+                aug1 = aug1.cuda()
+                aug2 = aug2.cuda()
             if torch.cuda.is_available():
                 target = target.cuda(args.gpu, non_blocking=True)
 
+            inputs = [images, caption, aug1, aug2]
             # compute output
-            output = model(images)
+            output = model(inputs)
+            
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 3))
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
             losses.update(loss.item(), images.size(0))
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))

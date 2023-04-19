@@ -22,6 +22,7 @@ import pandas as pd
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 diagnosis_map = {"NV":0, "SCC":1, "BKL":2, "AK":3, "BCC":4, "MEL":5, "DF":6, "VASC":7}
+# diagnosis_map = {"MALIGNANT":0, "BENIGN":1, "BENIGN_WITHOUT_CALLBACK":2}
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
@@ -100,6 +101,66 @@ class ISICE2ETrainDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.samples)
 
+class CBISValDataset(torch.utils.data.Dataset):
+    def __init__(self, val_transform, root, val_path, context_length=26):
+        annotations = pd.read_csv(val_path)
+        self.samples = [(annotations.loc[i,'image_path'], annotations.loc[i, 'description'], annotations.loc[i,'pathology']) for i in range(len(annotations))]
+        self.root = root
+        self.transform = val_transform
+        # self.tokenizer = tokenizer 
+        self.context_length=context_length
+    def __getitem__(self, i):
+        image_id, caption, target = self.samples[i]
+        path = os.path.join(self.root, image_id)
+        img = pil_loader(path)
+        image = self.transform(img)
+        target = diagnosis_map[target]
+        # caption = self.tokenizer.encode_plus(caption, max_length=self.context_length, padding='max_length', truncation=True, return_tensors='pt')
+        
+        return image, caption, target
+    def __len__(self):
+        return len(self.samples)
+
+class CBISE2ETrainDataset(torch.utils.data.Dataset):
+    def __init__(self, transform, root, val_path, tokenizer, context_length=26):
+        annotations = pd.read_csv(val_path)
+        self.samples = [(annotations.loc[i,'image_path'], annotations.loc[i, 'description'], annotations.loc[i,'pathology']) for i in range(len(annotations))]
+        self.root = root
+        self.transform = transform
+        self.tokenizer = tokenizer 
+
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+        # normalize = transforms.Normalize(mean=[170.611, 134.134, 132.450], std=[10.039, 8.356, 8.342])
+        self.augment = transforms.Compose([
+            transforms.RandomResizedCrop(384, scale=(0.08, 1.)),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+            ], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([utils.GaussianBlur([.1, 2.])], p=0.5),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ])
+        self.context_length = context_length
+
+    def __getitem__(self, i):
+        image_id, caption, target = self.samples[i]
+        path = os.path.join(self.root, image_id)
+        img = pil_loader(path)
+        image = self.transform(img)
+        target = diagnosis_map[target]
+        caption = self.tokenizer.encode_plus(caption, max_length=self.context_length, padding='max_length', truncation=True, return_tensors='pt')
+        
+        aug1 = self.augment(img)
+        aug2 = self.augment(img)
+
+        return image, caption, target, aug1, aug2
+    def __len__(self):
+        return len(self.samples)
+
 
 class ImageCaptionDatasetBase(torch.utils.data.Dataset):
     def __init__(self, dataset, root, metadata):
@@ -122,8 +183,11 @@ class ImageCaptionDatasetBase(torch.utils.data.Dataset):
                 annotations = json.load(f)
             self.samples = [(ann['image_id'], ann['subreddit'], ann['caption']) for ann in annotations]
         elif self.dataset == 'isic':
-            annotations = pd.read_csv(metadata)
+            annotations = pd.read_csv(root+'train_split_metadata.csv')
             self.samples = [(annotations.loc[i,'image_name'], annotations.loc[i,'description']) for i in range(len(annotations))]
+        elif self.dataset == 'cbis':
+            annotations = pd.read_csv(root+'train_split_metadata.csv')
+            self.samples = [(annotations.loc[i,'image_path'], annotations.loc[i,'description']) for i in range(len(annotations))]
 
     def get_raw_item(self, i):
         if self.dataset == 'yfcc15m':
@@ -156,6 +220,10 @@ class ImageCaptionDatasetBase(torch.utils.data.Dataset):
             path = os.path.join(self.root, 'full_data/', image_id)
             img = pil_loader(path)
             # print(img.shape, caption.shape)
+        elif self.dataset == 'cbis':
+            image_id, caption = self.samples[i]
+            path = os.path.join(self.root, image_id)
+            img = pil_loader(path)
         return img, caption
 
     def __getitem__(self, i):

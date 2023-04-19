@@ -279,5 +279,8 @@
     ],
     "isic": [
         "The patient has {} skin lesion."
+    ],
+    "cbis": [
+        "The patient has {} pathology."
     ]
 }
