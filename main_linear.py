@@ -278,6 +278,7 @@ def main(args):
                 f.write(json.dumps(log_stats) + '\n')
     
     print("Evaluating on test dataset:")
+    model_best = torch.load(f'{args.output_dir}/'+args.save_model_name_tag+'_checkpoint_best_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt', map_location=loc)
     test_stats = validate(test_loader, model, criterion, args)
     log_stats = {**{f'test_{k}': v for k, v in test_stats.items()}}
     if utils.is_main_process():

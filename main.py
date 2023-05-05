@@ -113,6 +113,7 @@ def main(args):
     print("=> creating model: {}".format(args.model))
     
     model = getattr(models, args.model)(ssl_mlp_dim=args.ssl_mlp_dim, ssl_emb_dim=args.ssl_emb_dim, context_length=args.context_length)
+    import pdb; pdb.set_trace()
     model.cuda(args.gpu)
 
     if args.distributed:
