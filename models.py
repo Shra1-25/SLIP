@@ -13,6 +13,7 @@ import torch
 from torch import nn
 
 import losses
+from torch import inf
 
 
 class LayerNorm(nn.LayerNorm):

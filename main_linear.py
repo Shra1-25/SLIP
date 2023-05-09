@@ -47,6 +47,7 @@ def get_args_parser():
     parser.add_argument('-b', '--batch-size', default=32, type=int,
                         metavar='N',
                         help='number of samples per-device/per-gpu ')
+    parser.add_argument('--model', default='SLIP_ResNet50', type=str)
     parser.add_argument('--num-classes', default=8, type=int)
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial (base) learning rate', dest='lr')
@@ -212,9 +213,9 @@ def main(args):
         normalize,
     ])
 
-    train_dataset = datasets.CBISValDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
-    val_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
-    test_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), context_length=args.context_length)
+    train_dataset = datasets.ISICValDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
+    val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
+    test_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), context_length=args.context_length)
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -278,8 +279,11 @@ def main(args):
                 f.write(json.dumps(log_stats) + '\n')
     
     print("Evaluating on test dataset:")
-    model_best = torch.load(f'{args.output_dir}/'+args.save_model_name_tag+'_checkpoint_best_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt', map_location=loc)
-    test_stats = validate(test_loader, model, criterion, args)
+    ckpt = torch.load(f'{args.output_dir}/'+args.save_model_name_tag+'_checkpoint_best_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt', map_location=loc)
+    model_best = timm.models.create_model(args.arch, num_classes=args.num_classes)
+    model_best.cuda(args.gpu)
+    model_best.load_state_dict(ckpt['state_dict'])
+    test_stats = validate(test_loader, model_best, criterion, args)
     log_stats = {**{f'test_{k}': v for k, v in test_stats.items()}}
     if utils.is_main_process():
             with open(os.path.join(args.output_dir, 'linear_test_{}_lr={}_log.txt'.format(args.dataset, args.lr)), 'a') as f:

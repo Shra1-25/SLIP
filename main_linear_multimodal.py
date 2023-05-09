@@ -13,6 +13,8 @@ import shutil
 import time
 import timm
 import warnings
+from torch import inf
+
 
 import torch
 import torch.nn as nn
@@ -44,7 +46,7 @@ def get_args_parser():
                         help='model architecture: (default: ViT-B/16)')
     parser.add_argument('-j', '--workers', default=64, type=int, metavar='N',
                         help='number of data loading workers (default: 64)')
-    parser.add_argument('--epochs', default=25, type=int, metavar='N',
+    parser.add_argument('--epochs', default=0, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
@@ -306,7 +308,11 @@ def main(args):
                 f.write(json.dumps(log_stats) + '\n')
     
     print("Evaluating on test dataset:")
-    test_stats = validate(test_loader, model, criterion, args)
+    ckpt = torch.load(f'{args.output_dir}/'+args.save_model_name_tag+'_checkpoint_best_seed_'+str(args.seed)+'_context_len_'+str(args.context_length)+'.pt', map_location=loc)
+    model_best = LanguageAndVisionConcat(embed_module=slip_model, num_classes=args.num_classes)
+    model_best.cuda(args.gpu)
+    model_best.load_state_dict(ckpt['state_dict'])
+    test_stats = validate(test_loader, model_best, criterion, args)
     log_stats = {**{f'test_{k}': v for k, v in test_stats.items()}}
     if utils.is_main_process():
             with open(os.path.join(args.output_dir, 'linear_test_{}_lr={}_log.txt'.format(args.dataset, args.lr)), 'a') as f:
@@ -390,6 +396,7 @@ def validate(val_loader, model, criterion, args):
     with torch.no_grad():
         end = time.time()
         for i, (images, caption, target, aug1, aug2) in enumerate(val_loader):
+            import pdb; pdb.set_trace()
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
                 for k,v in caption.items():
