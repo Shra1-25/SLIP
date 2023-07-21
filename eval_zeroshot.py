@@ -102,16 +102,16 @@ def main(args):
         if d in ['aircraft', 'pets', 'caltech101', 'flowers']:
             metric = mean_per_class(*acc_or_outputs)
         elif d == 'kinetics700_frames':
-            top1, top5 = accuracy(*acc_or_outputs, topk=(1, 3))
+            top1, top5 = accuracy(*acc_or_outputs, topk=(1, min(5,old_args.num_classes)))
             metric = (top1 + top5) / 2
             metric = metric.item()
         elif d == 'hateful_memes':
             metric = roc_auc(*acc_or_outputs)
         elif d == 'isic' or d == "cbis":
             # roc_score = roc_auc(*acc_or_outputs[1])
-            acc_score = accuracy(acc_or_outputs[1][0], acc_or_outputs[1][1], topk=(1,3))
-            rec_score = recall_score(acc_or_outputs[1][1], acc_or_outputs[1][0].argmax(dim=1), labels=[0,1,2,3,4,5,6,7], average='micro')
-            auc_score = AUROC(task='multiclass', num_classes=3)(acc_or_outputs[1][0], acc_or_outputs[1][1])
+            acc_score = accuracy(acc_or_outputs[1][0], acc_or_outputs[1][1], topk=(1,min(5,old_args.num_classes)))
+            rec_score = recall_score(acc_or_outputs[1][1], acc_or_outputs[1][0].argmax(dim=1), labels=range(old_args.num_classes), average='micro')
+            auc_score = AUROC(task='multiclass', num_classes=old_args.num_classes)(acc_or_outputs[1][0], acc_or_outputs[1][1])
         else:
             metric = acc_or_outputs
 

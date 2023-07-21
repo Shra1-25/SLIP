@@ -46,7 +46,7 @@ def get_args_parser():
                         help='model architecture: (default: ViT-B/16)')
     parser.add_argument('-j', '--workers', default=64, type=int, metavar='N',
                         help='number of data loading workers (default: 64)')
-    parser.add_argument('--epochs', default=0, type=int, metavar='N',
+    parser.add_argument('--epochs', default=25, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
@@ -360,7 +360,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        acc1, acc5 = accuracy(output, target, topk=(1, min(5,args.num_classes)))
         losses.update(loss.item(), images.size(0))
         top1.update(acc1.item(), images.size(0))
         top5.update(acc5.item(), images.size(0))
@@ -396,7 +396,6 @@ def validate(val_loader, model, criterion, args):
     with torch.no_grad():
         end = time.time()
         for i, (images, caption, target, aug1, aug2) in enumerate(val_loader):
-            import pdb; pdb.set_trace()
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
                 for k,v in caption.items():
@@ -413,12 +412,12 @@ def validate(val_loader, model, criterion, args):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            acc1, acc5 = accuracy(output, target, topk=(1, min(5,args.num_classes)))
             losses.update(loss.item(), images.size(0))
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))
             
-            rec_score = recall_score(target.cpu(), output.argmax(dim=1).cpu(), labels=[0,1,2,3,4,5,6,7], average='micro')
+            rec_score = recall_score(target.cpu(), output.argmax(dim=1).cpu(), labels=range(args.num_classes), average='micro')
             auc_score = AUROC(task='multiclass', num_classes=args.num_classes)(output, target)
             # measure elapsed time
             batch_time.update(time.time() - end)

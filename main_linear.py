@@ -212,11 +212,14 @@ def main(args):
         transforms.ToTensor(),
         normalize,
     ])
-
-    train_dataset = datasets.ISICValDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
-    val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
-    test_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), context_length=args.context_length)
-
+    if args.dataset=='isic':
+        train_dataset = datasets.ISICValDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
+        val_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
+        test_dataset = datasets.ISICValDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), context_length=args.context_length)
+    elif args.dataset=='cbis':
+        train_dataset = datasets.CBISValDataset(train_transform, args.root, os.path.join(args.root, 'train_split_metadata.csv'), context_length=args.context_length)# datasets.get_downstream_dataset(catalog, args.dataset, is_train=True, transform=train_transform)
+        val_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'val_split_metadata.csv'), context_length=args.context_length) # datasets.get_downstream_dataset(catalog, args.dataset, is_train=False, transform=val_transform)
+        test_dataset = datasets.CBISValDataset(val_transform, args.root, os.path.join(args.root, 'test_data.csv'), context_length=args.context_length)
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     else:
@@ -325,7 +328,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 3))
+        acc1, acc5 = accuracy(output, target, topk=(1, min(5,args.num_classes)))
         losses.update(loss.item(), images.size(0))
         top1.update(acc1.item(), images.size(0))
         top5.update(acc5.item(), images.size(0))
@@ -371,12 +374,12 @@ def validate(val_loader, model, criterion, args):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 3))
+            acc1, acc5 = accuracy(output, target, topk=(1, min(5,args.num_classes)))
             losses.update(loss.item(), images.size(0))
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))
             
-            rec_score = recall_score(target.cpu(), output.argmax(dim=1).cpu(), labels=[0,1,2,3,4,5,6,7], average='micro')
+            rec_score = recall_score(target.cpu(), output.argmax(dim=1).cpu(), labels=range(args.num_classes), average='micro')
             auc_score = AUROC(task='multiclass', num_classes=args.num_classes)(output, target)
             # measure elapsed time
             batch_time.update(time.time() - end)

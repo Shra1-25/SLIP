@@ -21,8 +21,8 @@ import pandas as pd
 
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-diagnosis_map = {"NV":0, "SCC":1, "BKL":2, "AK":3, "BCC":4, "MEL":5, "DF":6, "VASC":7}
-# diagnosis_map = {"MALIGNANT":0, "BENIGN":1, "BENIGN_WITHOUT_CALLBACK":2}
+# diagnosis_map = {"NV":0, "SCC":1, "BKL":2, "AK":3, "BCC":4, "MEL":5, "DF":6, "VASC":7}
+diagnosis_map = {"MALIGNANT":0, "BENIGN":1, "BENIGN_WITHOUT_CALLBACK":2}
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
